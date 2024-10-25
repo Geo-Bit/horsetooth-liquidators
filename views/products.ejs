@@ -1,0 +1,15 @@
+<html>
+<head>
+  <title>Products - Horsetooth Liquidators Inc.</title>
+</head>
+<body>
+  <h1>Our Products</h1>
+  <ul>
+    <% products.forEach(function(product) { %>
+      <li><%= product.name %> - $<%= product.price %></li>
+    <% }); %>
+  </ul>
+  <a href='/'>Back to Home</a>
+</body>
+</html>
+
