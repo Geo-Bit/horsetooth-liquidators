@@ -1,0 +1,57 @@
+:root {
+  /* Color palette inspired by Horsetooth Reservoir and Colorado */
+  --primary-red: #8B2E1A;      /* Sandstone red */
+  --secondary-blue: #4A7B9D;   /* Reservoir blue */
+  --accent-green: #2E4D1B;     /* Pine forest green */
+  --sand-light: #E8D5B5;       /* Light sandstone */
+  --rock-gray: #58534F;        /* Horsetooth rock */
+  --off-white: #F5F5F5;        /* Background color */
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: var(--off-white);
+  color: var(--rock-gray);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+/* Common container for consistent spacing */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--primary-red);
+  font-family: 'Georgia', serif;  /* Slightly dated but professional look */
+}
+
+/* Button styles */
+.btn {
+  background-color: var(--secondary-blue);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.btn:hover {
+  background-color: var(--accent-green);
+}
+
+/* Card style for products */
+.card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
