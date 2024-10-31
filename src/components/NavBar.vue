@@ -12,12 +12,23 @@
           <span class="cart-icon">🛒</span>
           <span v-if="cartItemCount" class="cart-count">{{ cartItemCount }}</span>
         </router-link>
+        
+        <!-- Updated Auth Section -->
         <div class="auth-section" v-if="!isLoggedIn">
           <button @click="showLoginModal" class="btn-login">Login</button>
         </div>
-        <div class="user-info" v-else>
-          <span class="welcome-text">Welcome, {{ user.name }}</span>
-          <button @click="logout" class="btn-logout">Logout</button>
+        <div class="user-menu" v-else>
+          <div class="user-dropdown">
+            <button class="user-button" @click="toggleDropdown">
+              <span class="user-icon">👤</span>
+              {{ user.name }}
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="dropdown-menu" v-show="dropdownOpen">
+              <router-link to="/profile" class="dropdown-item">My Profile</router-link>
+              <button @click="logout" class="dropdown-item">Logout</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -56,13 +67,14 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 
 export default {
   setup() {
     const store = useStore()
     const loginModalOpen = ref(false)
+    const dropdownOpen = ref(false)
     const errorMessage = ref('')
     const loginForm = ref({
       email: '',
@@ -97,6 +109,26 @@ export default {
       store.dispatch('auth/logout')
     }
 
+    const toggleDropdown = () => {
+      dropdownOpen.value = !dropdownOpen.value
+    }
+
+    // Close dropdown when clicking outside
+    const closeDropdown = (e) => {
+      if (!e.target.closest('.user-dropdown')) {
+        dropdownOpen.value = false
+      }
+    }
+
+    // Add event listener for clicking outside
+    onMounted(() => {
+      document.addEventListener('click', closeDropdown)
+    })
+
+    onUnmounted(() => {
+      document.removeEventListener('click', closeDropdown)
+    })
+
     return {
       loginModalOpen,
       errorMessage,
@@ -107,7 +139,9 @@ export default {
       closeLoginModal,
       handleLogin,
       logout,
-      cartItemCount
+      cartItemCount,
+      dropdownOpen,
+      toggleDropdown
     }
   }
 }
@@ -237,5 +271,92 @@ export default {
   font-size: 0.8rem;
   min-width: 20px;
   text-align: center;
+}
+
+.user-menu {
+  position: relative;
+  margin-left: 15px;
+}
+
+.user-dropdown {
+  position: relative;
+}
+
+.user-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: none;
+  border: 1px solid var(--rock-gray);
+  border-radius: 4px;
+  color: var(--rock-gray);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.user-button:hover {
+  background-color: #f5f5f5;
+  border-color: var(--secondary-blue);
+  color: var(--secondary-blue);
+}
+
+.user-icon {
+  font-size: 1.2em;
+}
+
+.dropdown-arrow {
+  font-size: 0.8em;
+  margin-left: 4px;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 5px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  min-width: 150px;
+  z-index: 1000;
+}
+
+.dropdown-item {
+  display: block;
+  padding: 10px 15px;
+  color: var(--rock-gray);
+  text-decoration: none;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-size: 1em;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+  color: var(--secondary-blue);
+}
+
+.dropdown-item + .dropdown-item {
+  border-top: 1px solid #eee;
+}
+
+@media (max-width: 768px) {
+  .user-menu {
+    margin-left: 10px;
+  }
+
+  .user-button {
+    padding: 6px 12px;
+  }
+
+  .user-button span:not(.user-icon) {
+    display: none;
+  }
 }
 </style> 

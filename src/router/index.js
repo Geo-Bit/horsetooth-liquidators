@@ -6,6 +6,7 @@ import Checkout from '../views/Checkout.vue';
 import Cart from '../views/Cart.vue';
 import About from '../views/About.vue';
 import JobPosting from '../views/JobPosting.vue';
+import UserProfile from '../views/UserProfile.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -15,6 +16,7 @@ const routes = [
   { path: '/cart', name: 'Cart', component: Cart },
   { path: '/about', name: 'About', component: About },
   { path: '/careers/security-specialist', name: 'JobPosting', component: JobPosting },
+  { path: '/profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
 ];
 
 const router = createRouter({
