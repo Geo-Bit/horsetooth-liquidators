@@ -7,6 +7,7 @@
       
       <div class="nav-links">
         <router-link to="/products">Products</router-link>
+        <router-link to="/about">About Us</router-link>
         <router-link to="/cart" class="cart-link">
           <span class="cart-icon">🛒</span>
           <span v-if="cartItemCount" class="cart-count">{{ cartItemCount }}</span>
