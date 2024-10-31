@@ -2,8 +2,16 @@
   <div class="container">
     <h2 class="page-title">Our Inventory</h2>
     
-    <!-- Category Filter -->
+    <!-- Search and Filter Section -->
     <div class="filters">
+      <div class="search-bar">
+        <input 
+          type="text" 
+          v-model="searchQuery" 
+          placeholder="Search inventory..."
+          class="search-input"
+        >
+      </div>
       <select v-model="selectedCategory" class="category-filter">
         <option value="">All Categories</option>
         <option v-for="category in categories" 
@@ -14,6 +22,12 @@
       </select>
     </div>
 
+    <!-- No Results Message -->
+    <div v-if="filteredProducts.length === 0" class="no-results">
+      <p>No products found. Try adjusting your search or category filter.</p>
+    </div>
+
+    <!-- Product Grid (existing code) -->
     <div class="product-grid">
       <div v-for="product in filteredProducts" 
            :key="product.id" 
@@ -62,7 +76,8 @@ export default {
   data() {
     return {
       products: productsData.products,
-      selectedCategory: ''
+      selectedCategory: '',
+      searchQuery: ''
     }
   },
   computed: {
@@ -70,10 +85,26 @@ export default {
       return [...new Set(this.products.map(product => product.category))]
     },
     filteredProducts() {
-      if (!this.selectedCategory) return this.products
-      return this.products.filter(product => 
-        product.category === this.selectedCategory
-      )
+      let filtered = this.products
+
+      // Apply category filter
+      if (this.selectedCategory) {
+        filtered = filtered.filter(product => 
+          product.category === this.selectedCategory
+        )
+      }
+
+      // Apply search filter
+      if (this.searchQuery.trim()) {
+        const query = this.searchQuery.toLowerCase().trim()
+        filtered = filtered.filter(product => 
+          product.title.toLowerCase().includes(query) ||
+          product.description.toLowerCase().includes(query) ||
+          product.category.toLowerCase().includes(query)
+        )
+      }
+
+      return filtered
     }
   },
   methods: {
@@ -100,15 +131,47 @@ export default {
 }
 
 .filters {
+  display: flex;
+  gap: 15px;
   margin-bottom: 30px;
-  text-align: right;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.search-bar {
+  flex: 0 1 400px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 16px;
+  border: 1px solid var(--rock-gray);
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--secondary-blue);
+  box-shadow: 0 0 0 2px rgba(var(--secondary-blue-rgb), 0.1);
 }
 
 .category-filter {
+  width: 200px;
   padding: 8px 16px;
   border: 1px solid var(--rock-gray);
   border-radius: 4px;
   background-color: white;
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px;
+  color: var(--rock-gray);
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin: 20px 0;
 }
 
 .product-grid {
@@ -213,6 +276,20 @@ export default {
 @media (max-width: 768px) {
   .product-grid {
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .search-bar {
+    flex: 1;
+  }
+
+  .category-filter {
+    width: 100%;
   }
 }
 </style>
