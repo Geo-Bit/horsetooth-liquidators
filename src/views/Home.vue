@@ -22,7 +22,7 @@
           <div class="announcement-card">
             <h3>Now Hiring: IT Security Specialist</h3>
             <p>Growing company seeks experienced security professional. Competitive salary, flexible hours.</p>
-            <a href="#" class="link">Learn More →</a>
+            <router-link to="/careers/security-specialist" class="link">Learn More →</router-link>
           </div>
           <div class="announcement-card">
             <h3>Local Business Award</h3>
