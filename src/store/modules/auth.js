@@ -32,10 +32,14 @@ const actions = {
     }
   },
 
-  logout({ commit }) {
+  async logout({ commit, dispatch }) {
     localStorage.removeItem('token')
     delete axios.defaults.headers.common['Authorization']
     commit('SET_LOGOUT')
+    // Reset chat history
+    if (window.__chatBot) {
+      window.__chatBot.resetChat()
+    }
   },
 
   // Add this new action to check auth state

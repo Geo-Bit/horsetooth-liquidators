@@ -2,11 +2,13 @@
 import { ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import NavBar from './components/NavBar.vue'
+import ChatBot from './components/ChatBot.vue'
 
 export default {
   name: 'App',
   components: {
-    NavBar
+    NavBar,
+    ChatBot
   },
   setup() {
     const store = useStore()
@@ -29,6 +31,7 @@ export default {
     <NavBar />
     <router-view v-if="!isLoading"></router-view>
     <div v-else class="loading">Loading...</div>
+    <ChatBot />
   </div>
 </template>
 
@@ -48,5 +51,10 @@ export default {
 .loading {
   text-align: center;
   padding: 2rem;
+}
+
+#app {
+  position: relative;
+  min-height: 100vh;
 }
 </style>

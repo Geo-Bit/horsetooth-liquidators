@@ -2,13 +2,13 @@
   <div class="chatbot-container" :class="{ 'is-open': isOpen }">
     <!-- Chat Icon -->
     <button class="chat-icon" @click="toggleChat" v-if="!isOpen">
-      <span class="icon">💬</span>
+      <span class="icon">🦊</span>
     </button>
 
     <!-- Chat Window -->
     <div class="chat-window" v-if="isOpen">
       <div class="chat-header">
-        <h3>Customer Support</h3>
+        <h3>Sly the Support Fox 🦊</h3>
         <button class="close-btn" @click="toggleChat">×</button>
       </div>
 
@@ -16,7 +16,7 @@
         <div v-for="(message, index) in messages" 
              :key="index" 
              :class="['message', message.sender]">
-          <div class="message-content">{{ message.text }}</div>
+          <div class="message-content" v-html="message.text"></div>
         </div>
       </div>
 
@@ -29,46 +29,143 @@
             {{ prompt.text }}
           </option>
         </select>
-        <button @click="sendMessage" :disabled="!selectedPrompt">Send</button>
+        <button @click="sendMessage" :disabled="!selectedPrompt">Ask Sly</button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { computed, onMounted, watch, ref } from 'vue'
+import { useStore } from 'vuex'
+
 export default {
   name: 'ChatBot',
+  setup() {
+    const store = useStore()
+    const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
+    const user = computed(() => store.getters['auth/user'])
+    const isAdmin = computed(() => user.value?.role === 'admin')
+    
+    // Create refs for data that needs to be watched/modified
+    const messages = ref([])
+    const secretCounter = ref(0)
+    const isOpen = ref(false)
+
+    // Watch for authentication changes
+    watch([isAuthenticated, user], ([newAuth, newUser], [oldAuth, oldUser]) => {
+      console.log('Auth changed:', { newAuth, oldAuth, newUser, oldUser })
+      if (newAuth !== oldAuth || newUser?.username !== oldUser?.username) {
+        // Reset chat state
+        messages.value = []
+        secretCounter.value = 0
+        
+        // If chat is open, show new greeting
+        if (isOpen.value) {
+          const greeting = getPersonalizedGreeting(newAuth, newUser)
+          messages.value.push({
+            text: greeting,
+            sender: 'bot'
+          })
+        }
+      }
+    })
+
+    // Helper function for personalized greeting
+    const getPersonalizedGreeting = (isAuth, userData) => {
+      if (isAuth && userData?.role === 'admin') {
+        return `Welcome back, Administrator ${userData.username}! 🎩 Need any special assistance today? (Psst... I might have some classified information for you!)`
+      } else if (isAuth) {
+        return `Hey ${userData.username}! 🦊 How can I help you today? I've got lots of interesting things to share!`
+      } else {
+        return "Hi there! I'm Sly, your foxy support assistant! 🦊 I love helping visitors discover our treasures... and maybe even some secrets!"
+      }
+    }
+
+    return {
+      isAuthenticated,
+      user,
+      isAdmin,
+      messages,
+      secretCounter,
+      isOpen,
+      getPersonalizedGreeting
+    }
+  },
   data() {
     return {
-      isOpen: false,
-      messages: [],
       selectedPrompt: '',
+      hasShownInitialGreeting: false,
       availablePrompts: [
         { id: 'hours', text: 'What are your business hours?' },
         { id: 'location', text: 'Where are you located?' },
         { id: 'shipping', text: 'Do you offer shipping?' },
         { id: 'returns', text: 'What is your return policy?' },
-        { id: 'help', text: 'I need technical support' }
+        { id: 'help', text: 'I need technical support' },
+        { id: 'about_sly', text: 'Tell me about yourself, Sly!' },
+        { id: 'secret', text: 'Do you know any secrets?' },
+        { id: 'vintage', text: 'Tell me about vintage tech' }
       ]
     }
   },
+  mounted() {
+    if (!localStorage.getItem('chatbot_greeted')) {
+      setTimeout(() => {
+        if (!this.hasShownInitialGreeting) {
+          this.showInitialGreeting()
+        }
+      }, 10000)
+    }
+  },
   methods: {
+    showInitialGreeting() {
+      this.isOpen = true
+      this.hasShownInitialGreeting = true
+      localStorage.setItem('chatbot_greeted', 'true')
+      
+      this.addBotMessage("👋 Hi there! I'm Sly, your foxy assistant! I know all about our inventory and *whispers* maybe even some secrets... Need any help? 🦊")
+    },
+    resetChat() {
+      this.messages = []
+      this.selectedPrompt = ''
+      this.secretCounter = 0
+      
+      if (this.isOpen) {
+        const greeting = this.getPersonalizedGreeting()
+        this.addBotMessage(greeting)
+      }
+    },
     toggleChat() {
       this.isOpen = !this.isOpen
       if (this.isOpen && this.messages.length === 0) {
-        this.addBotMessage("Hello! I'm Sly, how can I help you today?")
+        const greeting = this.getPersonalizedGreeting()
+        this.addBotMessage(greeting)
+      }
+    },
+    getPersonalizedGreeting() {
+      if (this.isAdmin) {
+        return `Welcome back, Administrator ${this.user.username}! 🎩 Need any special assistance today? (Psst... I might have some classified information for you!)`
+      } else if (this.isAuthenticated) {
+        return `Hey ${this.user.username}! 🦊 How can I help you today? I've got lots of interesting things to share!`
+      } else {
+        return "Hi there! I'm Sly, your foxy support assistant! 🦊 I love helping visitors discover our treasures... and maybe even some secrets!"
       }
     },
     sendMessage() {
       if (!this.selectedPrompt) return
 
-      // Add user message
-      const selectedPromptText = this.availablePrompts.find(p => p.id === this.selectedPrompt).text
-      this.addUserMessage(selectedPromptText)
+      console.log('Selected Prompt:', this.selectedPrompt)
+      
+      const promptObj = this.availablePrompts.find(p => p.id === this.selectedPrompt)
+      if (!promptObj) {
+        console.error('Prompt not found:', this.selectedPrompt)
+        return
+      }
 
-      // Simulate bot response
+      this.addUserMessage(promptObj.text)
+
+      const response = this.getBotResponse(this.selectedPrompt)
       setTimeout(() => {
-        const response = this.getBotResponse(this.selectedPrompt)
         this.addBotMessage(response)
       }, 500)
 
@@ -83,14 +180,51 @@ export default {
       this.scrollToBottom()
     },
     getBotResponse(promptId) {
-      const responses = {
-        hours: "We're open Monday-Friday 9AM-6PM, Saturday 10AM-4PM, and closed on Sundays.",
-        location: "We're located at 1234 Innovation Drive, Fort Collins, CO 80525.",
-        shipping: "Yes! We offer shipping throughout the continental US. Rates vary by item size and destination.",
-        returns: "We accept returns within 30 days with original receipt. Some restrictions apply.",
-        help: "I'll connect you with our technical support team. Please email support@horsetoothliquidators.com or call during business hours."
+      console.log('Processing prompt:', promptId)
+      
+      if (promptId === 'secret') {
+        this.secretCounter++
       }
-      return responses[promptId] || "I'm not sure about that. Please contact us directly for more information."
+
+      const responses = {
+        hours: "🕒 We're open Monday-Friday 9AM-6PM, Saturday 10AM-4PM, and closed on Sundays for fox naps!",
+        location: "📍 You can find us at 1234 Innovation Drive, Fort Collins, CO 80525. Look for the building with the vintage computer display in the window!",
+        shipping: "📦 You bet! We ship throughout the continental US. Just like a fox, your package will be swift and reliable!",
+        returns: "↩️ 30-day return policy with original receipt. Fair and simple, just how we foxes like it!",
+        help: this.getTechnicalSupportResponse(),
+        about_sly: "🦊 I'm Sly, a tech-savvy fox who loves vintage computers and helping customers! I know all about our inventory, especially the rare finds. Some say I even know a few secrets... *winks*",
+        secret: this.getSecretResponse(),
+        vintage: "🖥️ Ah, vintage tech! My favorite! We've got everything from Apple II's to Commodore 64's. Did you know we recently acquired a rare IBM 5150? *whispers* Some say there's a secret message hidden in its BIOS..."
+      }
+
+      const response = responses[promptId]
+      console.log('Found response:', response)
+      
+      return response || "Hmm, that's a tricky one. Even a clever fox needs help sometimes!"
+    },
+    getTechnicalSupportResponse() {
+      if (this.isAdmin) {
+        return "As an admin, you have access to our priority support line: 555-ADMIN. Also, check the admin dashboard for system status."
+      } else if (this.isAuthenticated) {
+        return "I'll connect you with our support team! Email support@horsetoothliquidators.com or call us during business hours."
+      } else {
+        return "Please log in to access our support services! Meanwhile, you can browse our FAQ section."
+      }
+    },
+    getSecretResponse() {
+      if (this.secretCounter >= 3) {
+        if (this.isAdmin) {
+          return "🦊 *adjusts tie* Ah, an administrator! Here's a special flag just for you: flag{admin_sly_fox_master} And between us... there might be more secrets in the vintage section!"
+        } else if (this.isAuthenticated) {
+          return "🦊 *whispers* For a loyal customer like you... here's a secret flag: flag{sly_fox_knows_best} But shhhh! Don't tell anyone!"
+        } else {
+          return "🦊 *winks* Curious one, aren't you? Here's a little secret: flag{curious_fox_seeker} But there might be more if you log in..."
+        }
+      } else if (this.secretCounter === 2) {
+        return "🦊 *looks around suspiciously* You seem really interested in secrets... Ask me again and I might tell you something special!"
+      } else {
+        return "🦊 *wags tail* Secrets? Me? Well... maybe if you ask nicely a few more times!"
+      }
     },
     scrollToBottom() {
       this.$nextTick(() => {
@@ -98,6 +232,9 @@ export default {
         container.scrollTop = container.scrollHeight
       })
     }
+  },
+  beforeUnmount() {
+    this.hasShownInitialGreeting = false
   }
 }
 </script>
