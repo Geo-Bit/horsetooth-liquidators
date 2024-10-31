@@ -2,18 +2,9 @@ import axios from 'axios'
 import store from '../store'
 import router from '../router'
 
-// Create axios instance with base URL
+// Create axios instance
 const api = axios.create({
   baseURL: 'http://localhost:3000/api'
-})
-
-// Add request interceptor
-api.interceptors.request.use(config => {
-  const token = store.state.auth.token
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
 })
 
 // Add response interceptor

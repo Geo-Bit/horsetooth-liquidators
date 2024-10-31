@@ -1,13 +1,34 @@
-<script setup>
+<script>
+import { ref, onMounted } from 'vue'
+import { useStore } from 'vuex'
 import NavBar from './components/NavBar.vue'
-import ChatBot from './components/ChatBot.vue'
+
+export default {
+  name: 'App',
+  components: {
+    NavBar
+  },
+  setup() {
+    const store = useStore()
+    const isLoading = ref(true)
+
+    onMounted(async () => {
+      await store.dispatch('auth/checkAuth')
+      isLoading.value = false
+    })
+
+    return {
+      isLoading
+    }
+  }
+}
 </script>
 
 <template>
-  <div>
+  <div id="app">
     <NavBar />
-    <router-view></router-view>
-    <ChatBot />
+    <router-view v-if="!isLoading"></router-view>
+    <div v-else class="loading">Loading...</div>
   </div>
 </template>
 
@@ -23,5 +44,9 @@ import ChatBot from './components/ChatBot.vue'
 }
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #42b883aa);
+}
+.loading {
+  text-align: center;
+  padding: 2rem;
 }
 </style>

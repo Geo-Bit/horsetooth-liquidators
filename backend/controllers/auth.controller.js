@@ -40,7 +40,7 @@ class AuthController {
                     role: user.role 
                 },
                 process.env.JWT_SECRET || 'your-default-secret-key',
-                { expiresIn: '1h' }
+                { expiresIn: '24h' }
             )
 
             res.json({

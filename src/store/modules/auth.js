@@ -3,15 +3,13 @@ import axios from 'axios'
 const state = {
   user: null,
   token: localStorage.getItem('token') || null,
-  isAuthenticated: false,
-  error: null
+  isAuthenticated: false
 }
 
 const getters = {
   isAuthenticated: state => state.isAuthenticated,
   user: state => state.user,
-  error: state => state.error,
-  isAdmin: state => state.user?.role === 'admin'
+  token: state => state.token
 }
 
 const actions = {
@@ -23,7 +21,7 @@ const actions = {
       // Save token to localStorage
       localStorage.setItem('token', token)
       
-      // Set axios default header for future requests
+      // Set axios default header
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       
       commit('SET_AUTH_SUCCESS', { token, user })
@@ -35,28 +33,30 @@ const actions = {
   },
 
   logout({ commit }) {
-    // Remove token from localStorage
     localStorage.removeItem('token')
-    
-    // Remove axios default header
     delete axios.defaults.headers.common['Authorization']
-    
     commit('SET_LOGOUT')
   },
 
-  // Check if user is still authenticated (useful for page refreshes)
+  // Add this new action to check auth state
   async checkAuth({ commit, state }) {
-    if (!state.token) return false
+    const token = state.token || localStorage.getItem('token')
+    
+    if (!token) {
+      commit('SET_LOGOUT')
+      return false
+    }
 
     try {
-      // Set axios header with existing token
-      axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`
+      // Set the token in axios headers
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       
-      // Test token validity by accessing profile endpoint
+      // Verify token by fetching user profile
       const response = await axios.get('http://localhost:3000/api/users/profile')
-      commit('SET_USER', response.data.user)
+      commit('SET_AUTH_SUCCESS', { token, user: response.data.user })
       return true
     } catch (error) {
+      console.error('Auth check failed:', error)
       commit('SET_LOGOUT')
       return false
     }
@@ -66,11 +66,6 @@ const actions = {
 const mutations = {
   SET_AUTH_SUCCESS(state, { token, user }) {
     state.token = token
-    state.user = user
-    state.isAuthenticated = true
-    state.error = null
-  },
-  SET_USER(state, user) {
     state.user = user
     state.isAuthenticated = true
   },
