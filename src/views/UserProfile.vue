@@ -1,110 +1,98 @@
 <template>
   <div class="profile-page">
     <div class="container">
-      <div class="profile-header">
-        <h1>User Profile</h1>
-        <div v-if="isAdmin" class="admin-badge">Admin User</div>
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-state">
+        Loading profile...
       </div>
 
-      <div class="profile-grid">
-        <!-- User Info Card -->
-        <div class="profile-card user-info">
-          <h2>Account Information</h2>
-          <div class="info-group">
-            <label>Name:</label>
-            <p>{{ user.name }}</p>
-          </div>
-          <div class="info-group">
-            <label>Email:</label>
-            <p>{{ user.email }}</p>
-          </div>
-          <div class="info-group">
-            <label>Member Since:</label>
-            <p>{{ memberSince }}</p>
-          </div>
+      <!-- Error State -->
+      <div v-else-if="!user" class="error-state">
+        <p>Please log in to view your profile</p>
+        <router-link to="/" class="btn-back">Back to Home</router-link>
+      </div>
+
+      <!-- Profile Content -->
+      <template v-else>
+        <div class="profile-header">
+          <h1>User Profile</h1>
+          <div v-if="isAdmin" class="admin-badge">Admin User</div>
         </div>
 
-        <!-- About Me Card -->
-        <div class="profile-card about-me">
-          <h2>About Me</h2>
-          <div v-if="!isEditing">
-            <p v-if="user.aboutMe">{{ user.aboutMe }}</p>
-            <p v-else class="placeholder-text">Tell us about yourself...</p>
-            <button @click="startEditing" class="btn-edit">Edit</button>
+        <div class="profile-grid">
+          <!-- User Info Card -->
+          <div class="profile-card user-info">
+            <h2>Account Information</h2>
+            <div class="info-group">
+              <label>Username:</label>
+              <p>{{ user.username }}</p>
+            </div>
+            <div class="info-group">
+              <label>Role:</label>
+              <p>{{ user.role }}</p>
+            </div>
+            <div class="info-group">
+              <label>Member Since:</label>
+              <p>{{ formatDate(user.created_at) }}</p>
+            </div>
           </div>
-          <div v-else class="edit-form">
-            <textarea 
-              v-model="editedAboutMe" 
-              rows="4" 
-              placeholder="Tell us about yourself..."
-            ></textarea>
-            <div class="button-group">
-              <button @click="saveChanges" class="btn-save">Save</button>
-              <button @click="cancelEditing" class="btn-cancel">Cancel</button>
+
+          <!-- Admin Section (only visible to admin users) -->
+          <div v-if="isAdmin" class="profile-card admin-section">
+            <h2>Admin Controls</h2>
+            <div class="admin-links">
+              <router-link to="/admin/products" class="admin-link">
+                Manage Products
+              </router-link>
+              <router-link to="/admin/users" class="admin-link">
+                Manage Users
+              </router-link>
+              <router-link to="/admin/orders" class="admin-link">
+                View Orders
+              </router-link>
             </div>
           </div>
         </div>
-
-        <!-- Admin Section (only visible to admin users) -->
-        <div v-if="isAdmin" class="profile-card admin-section">
-          <h2>Admin Controls</h2>
-          <div class="admin-links">
-            <router-link to="/admin/products" class="admin-link">
-              Manage Products
-            </router-link>
-            <router-link to="/admin/users" class="admin-link">
-              Manage Users
-            </router-link>
-            <router-link to="/admin/orders" class="admin-link">
-              View Orders
-            </router-link>
-          </div>
-        </div>
-      </div>
+      </template>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'UserProfile',
   
   setup() {
     const store = useStore()
-    const isEditing = ref(false)
-    const editedAboutMe = ref('')
+    const router = useRouter()
+    const loading = ref(true)
 
-    const user = computed(() => store.state.auth.user)
-    const isAdmin = computed(() => user.value?.email === 'admin@example.com')
-    const memberSince = computed(() => new Date().toLocaleDateString()) // Placeholder
+    const user = computed(() => store.getters['auth/user'])
+    const isAdmin = computed(() => user.value?.role === 'admin')
 
-    const startEditing = () => {
-      editedAboutMe.value = user.value.aboutMe || ''
-      isEditing.value = true
-    }
+    onMounted(async () => {
+      // Check authentication status
+      if (!store.getters['auth/isAuthenticated']) {
+        router.push('/login')
+        return
+      }
+      loading.value = false
+    })
 
-    const saveChanges = () => {
-      store.dispatch('auth/updateAboutMe', editedAboutMe.value)
-      isEditing.value = false
-    }
-
-    const cancelEditing = () => {
-      editedAboutMe.value = user.value.aboutMe || ''
-      isEditing.value = false
+    const formatDate = (dateString) => {
+      if (!dateString) return 'N/A'
+      return new Date(dateString).toLocaleDateString()
     }
 
     return {
       user,
       isAdmin,
-      memberSince,
-      isEditing,
-      editedAboutMe,
-      startEditing,
-      saveChanges,
-      cancelEditing
+      loading,
+      formatDate
     }
   }
 }
@@ -228,5 +216,21 @@ textarea {
   .profile-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.loading-state,
+.error-state {
+  text-align: center;
+  padding: 40px;
+}
+
+.btn-back {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: var(--secondary-blue);
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  margin-top: 20px;
 }
 </style> 

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import store from '../store/store-init';
 import Home from '../views/Home.vue';
 import ProductList from '../views/ProductList.vue';
 import ProductDetails from '../views/ProductDetails.vue';
@@ -23,5 +24,23 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
 });
+
+// Navigation guard
+router.beforeEach((to, from, next) => {
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    console.log('Checking auth state:', store.getters['auth/isAuthenticated'])
+    
+    if (!store.getters['auth/isAuthenticated']) {
+      next({ 
+        path: '/',
+        query: { redirect: to.fullPath }
+      })
+    } else {
+      next()
+    }
+  } else {
+    next()
+  }
+})
 
 export default router;
