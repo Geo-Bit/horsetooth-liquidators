@@ -8,6 +8,8 @@ import Cart from '../views/Cart.vue';
 import About from '../views/About.vue';
 import JobPosting from '../views/JobPosting.vue';
 import UserProfile from '../views/UserProfile.vue';
+import NotFound from '../views/NotFound.vue'
+import UserInbox from '@/views/UserInbox.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -18,6 +20,8 @@ const routes = [
   { path: '/about', name: 'About', component: About },
   { path: '/careers/security-specialist', name: 'JobPosting', component: JobPosting },
   { path: '/profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
+  { path: '/inbox', name: 'inbox', component: UserInbox, meta: { requiresAuth: true } },
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
 ];
 
 const router = createRouter({

@@ -26,6 +26,7 @@
               </button>
               <div class="dropdown-menu" v-show="dropdownOpen">
                 <router-link to="/profile" class="dropdown-item">My Profile</router-link>
+                <router-link to="/inbox" class="dropdown-item">Messages</router-link>
                 <button @click="logout" class="dropdown-item">Logout</button>
               </div>
             </div>

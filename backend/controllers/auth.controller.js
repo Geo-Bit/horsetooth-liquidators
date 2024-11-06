@@ -26,8 +26,17 @@ class AuthController {
                 return res.status(401).json({ message: 'Invalid credentials' })
             }
 
+            // Add debug logging
+            console.log('Found user:', { 
+                username: user.username, 
+                role: user.role,
+                passwordHash: user.password_hash.substring(0, 20) + '...' 
+            })
+
             // Compare password
             const validPassword = await bcrypt.compare(password, user.password_hash)
+            console.log('Password comparison result:', validPassword)
+
             if (!validPassword) {
                 return res.status(401).json({ message: 'Invalid credentials' })
             }
@@ -61,6 +70,15 @@ class AuthController {
             })
         }
     }
+
+    checkRole(requiredRole) {
+        return (req, res, next) => {
+            const userRole = req.user.role;
+            if (userRole === 'super_admin') return next();
+            if (userRole === requiredRole) return next();
+            return res.status(403).json({ message: 'Access denied' });
+        };
+    }
 }
 
-module.exports = new AuthController() 
+module.exports = new AuthController()
