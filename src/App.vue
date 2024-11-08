@@ -15,7 +15,11 @@ export default {
     const isLoading = ref(true)
 
     onMounted(async () => {
-      await store.dispatch('auth/checkAuth')
+      // Load auth and products data
+      await Promise.all([
+        store.dispatch('auth/checkAuth'),
+        store.dispatch('products/fetchProducts')
+      ])
       isLoading.value = false
     })
 

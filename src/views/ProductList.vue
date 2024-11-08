@@ -1,5 +1,9 @@
 <template>
   <div class="container">
+    <div v-if="error" class="error-message">
+      Error: {{ error }}
+    </div>
+
     <h2 class="page-title">Our Inventory</h2>
     
     <!-- Search and Filter Section -->
@@ -55,48 +59,51 @@
 </template>
 
 <script>
-import productsData from '../data/products.json'
 import { useStore } from 'vuex'
+import { ref, computed, onMounted } from 'vue'
 
 export default {
   name: 'ProductList',
   setup() {
     const store = useStore()
+    const searchQuery = ref('')
+    const selectedCategory = ref('')
+    const error = ref(null)
 
-    const addToCart = (product) => {
-      if (product.inventory > 0) {
-        store.dispatch('cart/addToCart', product)
+    onMounted(async () => {
+      try {
+        console.log('Store state before fetch:', store.state)
+        await store.dispatch('products/fetchProducts')
+        console.log('Store state after fetch:', store.state)
+      } catch (e) {
+        console.error('Error in setup:', e)
+        error.value = e.message
       }
-    }
+    })
 
-    return {
-      addToCart
-    }
-  },
-  data() {
-    return {
-      products: productsData.products,
-      selectedCategory: '',
-      searchQuery: ''
-    }
-  },
-  computed: {
-    categories() {
-      return [...new Set(this.products.map(product => product.category))]
-    },
-    filteredProducts() {
-      let filtered = this.products
+    const products = computed(() => {
+      const prods = store.getters['products/getProducts']
+      console.log('Computed products:', prods)
+      return prods
+    })
 
-      // Apply category filter
-      if (this.selectedCategory) {
+    const categories = computed(() => {
+      if (!products.value) return []
+      return [...new Set(products.value.map(product => product.category))]
+    })
+
+    const filteredProducts = computed(() => {
+      if (!products.value) return []
+      let filtered = products.value
+
+      if (selectedCategory.value) {
         filtered = filtered.filter(product => 
-          product.category === this.selectedCategory
+          product.category === selectedCategory.value
         )
       }
 
-      // Apply search filter
-      if (this.searchQuery.trim()) {
-        const query = this.searchQuery.toLowerCase().trim()
+      if (searchQuery.value.trim()) {
+        const query = searchQuery.value.toLowerCase().trim()
         filtered = filtered.filter(product => 
           product.title.toLowerCase().includes(query) ||
           product.description.toLowerCase().includes(query) ||
@@ -105,13 +112,28 @@ export default {
       }
 
       return filtered
+    })
+
+    const addToCart = (product) => {
+      if (product.inventory > 0) {
+        store.dispatch('cart/addToCart', product)
+      }
     }
-  },
-  methods: {
-    truncateDescription(description) {
+
+    const truncateDescription = (description) => {
       return description.length > 100 
         ? description.substring(0, 100) + '...' 
         : description
+    }
+
+    return {
+      searchQuery,
+      selectedCategory,
+      filteredProducts,
+      categories,
+      addToCart,
+      truncateDescription,
+      error
     }
   }
 }
