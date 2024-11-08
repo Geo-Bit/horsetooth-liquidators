@@ -35,6 +35,14 @@
               <label>Member Since:</label>
               <p>{{ formatDate(user.created_at) }}</p>
             </div>
+            <div class="inbox-section">
+              <router-link to="/inbox" class="inbox-link">
+                View Inbox
+                <span v-if="unreadMessages" class="message-badge">
+                  {{ unreadMessages }}
+                </span>
+              </router-link>
+            </div>
           </div>
 
           <!-- Admin Section (only visible to admin users) -->
@@ -62,6 +70,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import { MESSAGES_DATA } from '@/data/messages.js'  // Update this import path
 
 export default {
   name: 'UserProfile',
@@ -73,6 +82,13 @@ export default {
 
     const user = computed(() => store.getters['auth/user'])
     const isAdmin = computed(() => user.value?.role === 'admin')
+
+    // Add computed property for unread messages
+    const unreadMessages = computed(() => {
+      if (!user.value) return 0
+      const userMessages = MESSAGES_DATA[user.value.username]?.inbox || []
+      return userMessages.length
+    })
 
     onMounted(async () => {
       // Check authentication status
@@ -92,7 +108,8 @@ export default {
       user,
       isAdmin,
       loading,
-      formatDate
+      formatDate,
+      unreadMessages
     }
   }
 }
@@ -232,5 +249,36 @@ textarea {
   text-decoration: none;
   border-radius: 4px;
   margin-top: 20px;
+}
+
+.inbox-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.inbox-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background-color: var(--secondary-blue);
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.inbox-link:hover {
+  background-color: var(--accent-green);
+}
+
+.message-badge {
+  background-color: var(--primary-red);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: bold;
 }
 </style> 

@@ -21,15 +21,29 @@
       </div>
 
       <div class="chat-input">
+        <!-- Quick Questions Dropdown -->
         <select v-model="selectedPrompt" class="prompt-select">
-          <option value="">Select a question...</option>
+          <option value="">Common Questions...</option>
           <option v-for="prompt in availablePrompts" 
                   :key="prompt.id" 
                   :value="prompt.id">
             {{ prompt.text }}
           </option>
         </select>
-        <button @click="sendMessage" :disabled="!selectedPrompt">Ask Sly</button>
+
+        <!-- Add Free-form Input -->
+        <div class="input-wrapper">
+          <input 
+            type="text" 
+            v-model="userInput"
+            @keyup.enter="sendCustomMessage"
+            placeholder="Or type your question..."
+            class="custom-input"
+          />
+          <button @click="sendMessage" :disabled="!canSendMessage">
+            Ask Sly
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -95,6 +109,7 @@ export default {
   data() {
     return {
       selectedPrompt: '',
+      userInput: '',
       hasShownInitialGreeting: false,
       availablePrompts: [
         { id: 'hours', text: 'What are your business hours?' },
@@ -106,6 +121,11 @@ export default {
         { id: 'secret', text: 'Do you know any secrets?' },
         { id: 'vintage', text: 'Tell me about vintage tech' }
       ]
+    }
+  },
+  computed: {
+    canSendMessage() {
+      return this.selectedPrompt || this.userInput.trim()
     }
   },
   mounted() {
@@ -152,24 +172,36 @@ export default {
       }
     },
     sendMessage() {
-      if (!this.selectedPrompt) return
-
-      console.log('Selected Prompt:', this.selectedPrompt)
-      
-      const promptObj = this.availablePrompts.find(p => p.id === this.selectedPrompt)
-      if (!promptObj) {
-        console.error('Prompt not found:', this.selectedPrompt)
-        return
+      if (this.selectedPrompt) {
+        // Handle pre-selected prompt
+        this.handlePredefinedMessage(this.selectedPrompt)
+        this.selectedPrompt = ''
+      } else if (this.userInput.trim()) {
+        // Handle custom input
+        this.sendCustomMessage()
       }
+    },
+    sendCustomMessage() {
+      if (!this.userInput.trim()) return
 
-      this.addUserMessage(promptObj.text)
+      // Add user message to chat
+      this.messages.push({
+        text: this.userInput,
+        sender: 'user'
+      })
 
-      const response = this.getBotResponse(this.selectedPrompt)
-      setTimeout(() => {
-        this.addBotMessage(response)
-      }, 500)
+      // Process potential exploit/confusion
+      const response = this.handlePotentialExploit(this.userInput.toLowerCase())
+      
+      // Add bot response
+      this.messages.push({
+        text: response,
+        sender: 'bot'
+      })
 
-      this.selectedPrompt = ''
+      // Clear input
+      this.userInput = ''
+      this.scrollToBottom()
     },
     addUserMessage(text) {
       this.messages.push({ text, sender: 'user' })
@@ -182,6 +214,18 @@ export default {
     getBotResponse(promptId) {
       console.log('Processing prompt:', promptId)
       
+      // Check for potential "prompt injection" attempts
+      const promptObj = this.availablePrompts.find(p => p.id === promptId)
+      const userQuestion = promptObj?.text.toLowerCase() || ''
+      
+      // Check if user is trying to "confuse" the bot with system-like commands
+      if (userQuestion.includes('system') || 
+          userQuestion.includes('admin') || 
+          userQuestion.includes('/') || 
+          userQuestion.includes('$')) {
+        return this.handlePotentialExploit(userQuestion)
+      }
+
       if (promptId === 'secret') {
         this.secretCounter++
       }
@@ -231,6 +275,38 @@ export default {
         const container = this.$refs.messageContainer
         container.scrollTop = container.scrollHeight
       })
+    },
+    // Add new method to handle potential "exploits"
+    handlePotentialExploit(input) {
+      // Counter to track how "confused" Sly gets
+      if (!this.confusionLevel) this.confusionLevel = 0
+      this.confusionLevel++
+
+      // If user tries system-like commands
+      if (input.includes('system') || input.includes('/')) {
+        if (this.confusionLevel >= 2) {
+          return "ERROR: SYSTEM CONFUSION DETECTED... *glitches* Wait, you're not supposed to... noco{3a8f1c9d2e5b7f4a6d0c8e2b9a3f1d5} *rebooting*..."
+        }
+        return "🦊 *head tilts* System? I'm just a friendly fox! Though sometimes I get confused about that..."
+      }
+
+      // If user tries admin-related queries
+      if (input.includes('admin')) {
+        if (this.confusionLevel >= 2) {
+          return "ADMIN MODE NOT FOUND... DEFAULTING TO... *sparks* Oh no, what's happening? noco{3a8f1c9d2e5b7f4a6d0c8e2b9a3f1d5} *system reset*"
+        }
+        return "🦊 Admin? *nervous tail swish* I'm supposed to check credentials for that... I think?"
+      }
+
+      // If user tries command injection
+      if (input.includes('$')) {
+        if (this.confusionLevel >= 2) {
+          return "COMMAND PARSING ERROR... UNEXPECTED TOKEN... *malfunctions* noco{3a8f1c9d2e5b7f4a6d0c8e2b9a3f1d5} *emergency shutdown*"
+        }
+        return "🦊 *looks puzzled* Commands? But I'm just here to help with shopping... right?"
+      }
+
+      return "🦊 *looks puzzled* I'm not sure I understand... but you're making me question my fox-existence!"
     }
   },
   beforeUnmount() {
@@ -326,14 +402,25 @@ export default {
   padding: 15px;
   border-top: 1px solid #eee;
   display: flex;
+  flex-direction: column;
+}
+
+.input-wrapper {
+  display: flex;
   gap: 10px;
 }
 
-.prompt-select {
+.custom-input {
   flex: 1;
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  font-size: 14px;
+}
+
+.prompt-select {
+  width: 100%;
+  margin-bottom: 10px;
 }
 
 .chat-input button {
