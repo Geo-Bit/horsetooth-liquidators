@@ -4,13 +4,13 @@ import axios from 'axios'
 axios.defaults.withCredentials = true
 
 const state = {
-  user: null,
   token: localStorage.getItem('token') || null,
+  user: JSON.parse(localStorage.getItem('user')) || null,
   isAuthenticated: false
 }
 
 const getters = {
-  isAuthenticated: state => state.isAuthenticated,
+  isAuthenticated: state => !!state.token && !!state.user,
   user: state => state.user,
   isSuperAdmin: state => state.user?.role === 'super_admin',
   isAdmin: state => ['admin', 'super_admin'].includes(state.user?.role)
@@ -52,8 +52,9 @@ const actions = {
   // Add this new action to check auth state
   async checkAuth({ commit, state }) {
     const token = state.token || localStorage.getItem('token')
+    const storedUser = localStorage.getItem('user')
     
-    if (!token) {
+    if (!token || !storedUser) {
       commit('SET_LOGOUT')
       return false
     }
@@ -62,9 +63,17 @@ const actions = {
       // Set the token in axios headers
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       
+      // Parse stored user
+      const user = JSON.parse(storedUser)
+      
       // Verify token by fetching user profile
       const response = await axios.get('http://localhost:3000/api/users/profile')
-      commit('SET_AUTH_SUCCESS', { token, user: response.data.user })
+      
+      // If verification successful, set the auth state
+      commit('SET_AUTH_SUCCESS', { 
+        token, 
+        user: response.data.user || user 
+      })
       return true
     } catch (error) {
       console.error('Auth check failed:', error)
@@ -79,11 +88,17 @@ const mutations = {
     state.token = token
     state.user = user
     state.isAuthenticated = true
+    // Also update localStorage
+    localStorage.setItem('token', token)
+    localStorage.setItem('user', JSON.stringify(user))
   },
   SET_LOGOUT(state) {
     state.token = null
     state.user = null
     state.isAuthenticated = false
+    // Clear localStorage
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
   },
   SET_ERROR(state, error) {
     state.error = error

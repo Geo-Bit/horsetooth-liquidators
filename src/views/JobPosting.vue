@@ -86,6 +86,10 @@
   margin-bottom: 40px;
 }
 
+.tagline {
+  color: white;
+}
+
 .job-details {
   max-width: 800px;
   margin: 0 auto;
@@ -158,6 +162,9 @@
 @media (max-width: 768px) {
   .job-details {
     padding: 10px;
+  }
+  .hero {
+    margin-top: 60px;
   }
 }
 </style> 

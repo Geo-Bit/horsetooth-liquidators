@@ -1,30 +1,30 @@
 <script>
 import { ref, onMounted } from 'vue'
-import { useStore } from 'vuex'
 import NavBar from './components/NavBar.vue'
-import ChatBot from './components/ChatBot.vue'
+import LoadingSpinner from './components/LoadingSpinner.vue'
+import store from './store'
 
 export default {
   name: 'App',
   components: {
     NavBar,
-    ChatBot
+    LoadingSpinner
   },
   setup() {
-    const store = useStore()
-    const isLoading = ref(true)
+    const loading = ref(true)
 
     onMounted(async () => {
-      // Load auth and products data
-      await Promise.all([
-        store.dispatch('auth/checkAuth'),
-        store.dispatch('products/fetchProducts')
-      ])
-      isLoading.value = false
+      try {
+        await store.dispatch('auth/checkAuth')
+      } catch (error) {
+        console.error('Auth check failed:', error)
+      } finally {
+        loading.value = false
+      }
     })
 
     return {
-      isLoading
+      loading
     }
   }
 }
@@ -32,10 +32,9 @@ export default {
 
 <template>
   <div id="app">
-    <NavBar />
-    <router-view v-if="!isLoading"></router-view>
-    <div v-else class="loading">Loading...</div>
-    <ChatBot />
+    <nav-bar v-if="!loading"/>
+    <router-view v-if="!loading"/>
+    <loading-spinner v-else/>
   </div>
 </template>
 
@@ -60,5 +59,12 @@ export default {
 #app {
   position: relative;
   min-height: 100vh;
+  padding-top: 80px;
+}
+
+@media (max-width: 768px) {
+  #app {
+    padding-top: 60px;
+  }
 }
 </style>

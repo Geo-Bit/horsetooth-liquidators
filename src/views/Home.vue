@@ -2,6 +2,7 @@
   <div class="home">
     <div class="hero">
       <div class="container">
+        <img src="/logo.png" alt="Horsetooth Liquidators Logo" class="hero-logo">
         <h1>Welcome to Horsetooth Liquidators</h1>
         <p class="tagline">Your source for quality liquidated equipment in Colorado!</p>
         <router-link to="/products" class="btn">View Our Inventory</router-link>
@@ -184,6 +185,18 @@ h3 {
 @media (max-width: 768px) {
   .announcement-grid, .category-grid, .location-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+.hero-logo {
+  width: auto;
+  height: 240px;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+}
+
+@media (max-width: 768px) {
+  .hero-logo {
+    height: 80px;
   }
 }
 </style>

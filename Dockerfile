@@ -1,43 +1,55 @@
 # Build stage
-FROM --platform=linux/amd64 node:18-alpine as builder
+FROM node:18-alpine as builder
 
 WORKDIR /app
 
-# Install build dependencies for bcrypt
+# Install build dependencies
 RUN apk add --no-cache python3 make g++
 
-# Copy package files for frontend
+# Copy package files first
 COPY package*.json ./
-RUN npm install
-RUN npm rebuild bcrypt --build-from-source
+COPY backend/package*.json ./backend/
 
-# Copy the rest of the frontend files
+# Install all dependencies
+RUN npm install
+WORKDIR /app/backend
+RUN npm install
+WORKDIR /app
+
+# Copy all source files
 COPY . .
 
-# Build frontend
+# Build the frontend
 RUN npm run build
 
 # Production stage
-FROM --platform=linux/amd64 node:18-alpine
+FROM node:18-alpine
+
 WORKDIR /app
 
-# Install build dependencies for bcrypt
-RUN apk add --no-cache python3 make g++
+# Install PostgreSQL client
+RUN apk add --no-cache postgresql-client
 
-# Copy backend files first
-COPY backend ./backend/
+# Copy backend files and built frontend
+COPY --from=builder /app/backend ./backend
+COPY --from=builder /app/dist ./dist
 
-# Install backend dependencies
+# Copy wait-for-it script
+COPY backend/scripts/wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
+
+# Install production dependencies and rebuild bcrypt
 WORKDIR /app/backend
-RUN npm install --production
-RUN npm rebuild bcrypt --build-from-source
+RUN apk add --no-cache python3 make g++ \
+    && npm install --production \
+    && npm rebuild bcrypt --build-from-source \
+    && apk del python3 make g++
 
-# Copy built frontend from builder stage
-COPY --from=builder /app/dist ../dist
+# Move back to app directory
+WORKDIR /app
 
-# Add security measures
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
-
+# Expose port
 EXPOSE 3000
-CMD ["node", "server.js"]
+
+# Start the application with wait-for-it
+CMD ["/wait-for-it.sh", "db", "node", "backend/server.js"]

@@ -14,7 +14,11 @@ services:
       - JWT_SECRET=your_jwt_secret
     depends_on:
       - db
-    command: npm run build && node backend/server.js
+    healthcheck:
+      test: ["CMD-SHELL", "PGPASSWORD=your_password pg_isready -h db -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   db:
     image: postgres:14-alpine
@@ -25,6 +29,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data: 

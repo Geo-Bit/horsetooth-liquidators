@@ -2,7 +2,8 @@
   <nav class="nav-bar">
     <div class="container nav-container">
       <router-link to="/" class="logo">
-        Horsetooth Liquidators
+        <img src="/logo.png" alt="Horsetooth Liquidators Logo" class="logo-image">
+        <span class="logo-text">Horsetooth Liquidators</span>
       </router-link>
       
       <div class="nav-links">
@@ -26,6 +27,7 @@
               </button>
               <div class="dropdown-menu" v-show="dropdownOpen">
                 <router-link to="/profile" class="dropdown-item">My Profile</router-link>
+                <router-link to="/orders" class="dropdown-item">Order History</router-link>
                 <router-link to="/inbox" class="dropdown-item">Messages</router-link>
                 <button @click="logout" class="dropdown-item">Logout</button>
               </div>
@@ -176,19 +178,48 @@ export default {
   background-color: white;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   padding: 1rem 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1000;
+  height: 80px;
+  display: flex;
+  align-items: center;
 }
 
 .nav-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   color: var(--primary-red);
   font-size: 1.5rem;
   text-decoration: none;
   font-weight: bold;
+}
+
+.logo-image {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+}
+
+.logo-text {
+  /* Optionally hide text on mobile */
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 
 .nav-links {
@@ -380,6 +411,22 @@ export default {
   }
 
   .user-button span:not(.user-icon) {
+    display: none;
+  }
+
+  .logo-image {
+    height: 40px;
+  }
+
+  .nav-container {
+    padding: 0 10px;
+  }
+
+  .nav-links {
+    gap: 1rem;
+  }
+
+  .logo-text {
     display: none;
   }
 }

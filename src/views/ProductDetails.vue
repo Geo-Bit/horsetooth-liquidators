@@ -1,6 +1,9 @@
 <template>
   <div class="container">
-    <div v-if="product" class="product-details">
+    <div v-if="isLoading" class="loading">
+      Loading product details...
+    </div>
+    <div v-else-if="product" class="product-details">
       <!-- Product Information Section -->
       <div class="product-main">
         <div class="product-image">
@@ -154,7 +157,7 @@ export default {
     // Get product data from store instead of direct import
     const product = computed(() => {
       const productId = parseInt(route.params.id)
-      return store.getters.getProducts.find(p => p.id === productId)
+      return store.getters['products/getProducts'].find(p => p.id === productId)
     })
 
     // Use localStorage to store reviews per user
@@ -175,10 +178,15 @@ export default {
     const showFlagModal = ref(false)
     const flagMessage = ref('')
 
+    const isLoading = ref(true)
+
     onMounted(async () => {
-      // Fetch products if not already loaded
-      if (store.getters.getProducts.length === 0) {
-        await store.dispatch('fetchProducts')
+      try {
+        if (store.getters['products/getProducts'].length === 0) {
+          await store.dispatch('products/fetchProducts')
+        }
+      } finally {
+        isLoading.value = false
       }
 
       // Load reviews from localStorage for this user and product
@@ -278,7 +286,8 @@ export default {
       flag,
       updateInventory,
       showFlagModal,
-      flagMessage
+      flagMessage,
+      isLoading
     }
   }
 }
@@ -289,6 +298,7 @@ export default {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  padding-top: 100px;
 }
 
 .product-main {
@@ -546,6 +556,9 @@ textarea {
 @media (max-width: 768px) {
   .product-main {
     grid-template-columns: 1fr;
+  }
+  .container {
+    padding-top: 80px;
   }
 }
 </style>
