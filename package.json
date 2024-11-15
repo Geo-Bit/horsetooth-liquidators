@@ -9,6 +9,7 @@
     "serve": "node backend/server.js"
   },
   "dependencies": {
+    "axios": "^1.7.7",
     "vue": "^3.3.8",
     "vue-router": "^4.4.5",
     "vuex": "^4.1.0"

@@ -144,7 +144,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import axios from 'axios'
+import api from '../utils/axios'  // Use our configured axios instance
 
 export default {
   name: 'ProductDetails',
@@ -255,7 +255,7 @@ export default {
 
     const updateInventory = async (newInventory) => {
       try {
-        const response = await axios.put(`/api/products/update-inventory/${product.value.id}`, {
+        const response = await api.put(`/products/update-inventory/${product.value.id}`, {
           inventory: newInventory
         })
         

@@ -1,4 +1,4 @@
-import axios from 'axios'
+import api from '../../utils/axios'  // Use our configured axios instance
 
 const products = {
   namespaced: true,
@@ -15,7 +15,7 @@ const products = {
     async fetchProducts({ commit }) {
       console.log('Fetching products...')
       try {
-        const response = await axios.get('/api/products')
+        const response = await api.get('/products')  // Remove /api prefix since it's in baseURL
         console.log('API response:', response.data)
         commit('SET_PRODUCTS', response.data.products)
       } catch (error) {

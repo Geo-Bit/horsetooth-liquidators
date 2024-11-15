@@ -45,7 +45,7 @@
             </div>
           </div>
 
-          <!-- Admin Section (only visible to admin users) -->
+          <!-- Admin Section -->
           <div v-if="isAdmin" class="profile-card admin-section">
             <h2>Admin Controls</h2>
             <div class="admin-links">
@@ -70,7 +70,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { MESSAGES_DATA } from '@/data/messages.js'  // Update this import path
+import { MESSAGES_DATA } from '@/data/messages.js'
 
 export default {
   name: 'UserProfile',
@@ -99,17 +99,20 @@ export default {
       loading.value = false
     })
 
-    const formatDate = (dateString) => {
-      if (!dateString) return 'N/A'
-      return new Date(dateString).toLocaleDateString()
+    const formatDate = (date) => {
+      return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
     }
 
     return {
+      loading,
       user,
       isAdmin,
-      loading,
-      formatDate,
-      unreadMessages
+      unreadMessages,
+      formatDate
     }
   }
 }
@@ -117,7 +120,7 @@ export default {
 
 <style scoped>
 .profile-page {
-  padding: 40px 0;
+  padding: 20px;
 }
 
 .profile-header {
@@ -137,74 +140,30 @@ export default {
 
 .profile-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 30px;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
 .profile-card {
   background: white;
-  padding: 30px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .info-group {
-  margin: 15px 0;
+  margin-bottom: 15px;
 }
 
 .info-group label {
-  color: var(--rock-gray);
   display: block;
+  color: var(--rock-gray);
   margin-bottom: 5px;
 }
 
-.placeholder-text {
-  color: var(--rock-gray);
-  font-style: italic;
-}
-
-.edit-form {
-  margin-top: 15px;
-}
-
-textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  resize: vertical;
-}
-
-.button-group {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.btn-edit, .btn-save, .btn-cancel {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-edit {
-  background-color: var(--secondary-blue);
-  color: white;
-}
-
-.btn-save {
-  background-color: var(--accent-green);
-  color: white;
-}
-
-.btn-cancel {
-  background-color: var(--rock-gray);
-  color: white;
-}
-
-.admin-section {
-  grid-column: 1 / -1;
+.info-group p {
+  margin: 0;
+  font-size: 1.1em;
 }
 
 .admin-links {

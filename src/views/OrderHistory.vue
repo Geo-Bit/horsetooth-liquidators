@@ -12,8 +12,6 @@
       </div>
       
       <div v-else>
-        <div class="debug-comment"><!-- TODO: Remove in prod - Current endpoint: /api/orders/{userId} --></div>
-        
         <div v-if="!orders.length" class="no-orders">
           <p>You haven't placed any orders yet.</p>
           <router-link to="/products" class="btn-shop">Start Shopping</router-link>
@@ -22,21 +20,27 @@
         <div v-else class="orders-list">
           <div v-for="order in orders" :key="order.id" class="order-card">
             <div class="order-header">
-              <span class="order-id">Order #{{ order.id }}</span>
-              <span class="order-date">{{ formatDate(order.date) }}</span>
-              <span class="order-status" :class="order.status">{{ order.status }}</span>
-            </div>
-            
-            <div class="order-items">
-              <div v-for="item in order.items" :key="item.productId" class="order-item">
-                <span class="item-name">{{ item.name }}</span>
-                <span class="item-quantity">x{{ item.quantity }}</span>
-                <span class="item-price">${{ item.price }}</span>
+              <div class="order-header-left">
+                <span class="order-id">Order #{{ order.id }}</span>
+                <span class="order-date">{{ formatDate(order.date) }}</span>
               </div>
+              <button @click="loadOrderDetails(order.id)" class="btn-details">
+                View Details
+              </button>
             </div>
             
-            <div class="order-footer">
-              <span class="order-total">Total: ${{ order.total }}</span>
+            <!-- Order details section -->
+            <div v-if="orderDetails[order.id]" class="order-details">
+              <div class="order-items">
+                <div v-for="item in orderDetails[order.id].items" :key="item.productId" class="order-item">
+                  <span class="item-name">{{ item.name }}</span>
+                  <span class="item-quantity">x{{ item.quantity }}</span>
+                  <span class="item-price">${{ item.price }}</span>
+                </div>
+              </div>
+              <div class="order-footer">
+                <span class="order-total">Total: ${{ orderDetails[order.id].total }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -53,14 +57,13 @@ export default {
   name: 'OrderHistory',
   setup() {
     const orders = ref([])
+    const orderDetails = ref({})
     const loading = ref(true)
     const error = ref(null)
 
     const fetchOrders = async () => {
       try {
-        console.log('Fetching orders...')
         const response = await api.get('/orders')
-        console.log('Orders response:', response.data)
         orders.value = response.data.orders
       } catch (err) {
         console.error('Error fetching orders:', err)
@@ -70,16 +73,32 @@ export default {
       }
     }
 
+    const loadOrderDetails = async (orderId) => {
+      try {
+        // This request can be intercepted and modified
+        const response = await api.get(`/orders/${orderId}`)
+        orderDetails.value[orderId] = response.data.order
+      } catch (err) {
+        console.error(`Error fetching order ${orderId}:`, err)
+      }
+    }
+
     const formatDate = (date) => {
-      return new Date(date).toLocaleDateString()
+      return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
     }
 
     onMounted(fetchOrders)
 
     return {
       orders,
+      orderDetails,
       loading,
       error,
+      loadOrderDetails,
       formatDate
     }
   }
@@ -189,6 +208,31 @@ export default {
 }
 
 .btn-shop:hover {
+  background-color: var(--primary-red);
+}
+
+.order-header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.order-date {
+  color: var(--rock-gray);
+  font-size: 0.9em;
+}
+
+.btn-details {
+  padding: 8px 16px;
+  background-color: var(--secondary-blue);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-details:hover {
   background-color: var(--primary-red);
 }
 </style> 

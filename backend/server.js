@@ -7,37 +7,41 @@ validateEnv()
 const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
-const db = require('./config/database')
+const path = require('path')
+
+// Import routes
+const authRoutes = require('./routes/auth.routes')
 const productRoutes = require('./routes/product.routes')
 const orderRoutes = require('./routes/order.routes')
+const userRoutes = require('./routes/user.routes')
 
 const app = express()
 
-// Updated CORS configuration
-app.use(cors({
-    origin: 'http://localhost:5173',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-}))
-
+// Middleware
 app.use(helmet())
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://yourproductiondomain.com' 
+    : 'http://localhost:5173',
+  credentials: true
+}))
 app.use(express.json())
 
-// Initialize database
-db.initializeDatabase().catch(console.error)
+// Static files
+app.use(express.static(path.join(__dirname, '../dist')))
 
 // Routes
-app.use('/api/auth', require('./routes/auth.routes'))
-app.use('/api/users', require('./routes/user.routes'))
+app.use('/api/auth', authRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/orders', orderRoutes)
+app.use('/api/users', userRoutes)
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack)
-  res.status(500).json({ message: 'Something went wrong!' })
-})
+// Serve frontend for any other route in production
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'))
+  })
+}
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
