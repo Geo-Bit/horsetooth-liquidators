@@ -14,6 +14,7 @@ const authRoutes = require('./routes/auth.routes')
 const productRoutes = require('./routes/product.routes')
 const orderRoutes = require('./routes/order.routes')
 const userRoutes = require('./routes/user.routes')
+const securityRoutes = require('./routes/security.routes')
 
 const app = express()
 
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/users', userRoutes)
+app.use('/api/security', securityRoutes)
 
 // Serve frontend for any other route in production
 if (process.env.NODE_ENV === 'production') {
