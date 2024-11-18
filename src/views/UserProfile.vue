@@ -1,4 +1,12 @@
 <template>
+  <camera-auth-modal
+    :show="showAuthModal"
+    :camera-id="selectedCamera?.id"
+    :camera-location="selectedCamera?.location"
+    @close="closeAuthModal"
+    @authenticate="handleCameraAuth"
+  />
+
   <div class="profile-page">
     <div class="container">
       <!-- Loading State -->
@@ -59,9 +67,53 @@
                 View Orders
               </router-link>
             </div>
+
+            <!-- Security Camera Links -->
+            <div class="security-feeds">
+              <h3>Security Feeds</h3>
+              <div class="camera-links">
+                <div class="camera-item">
+                  <button @click="openCameraFeed(1)" class="camera-link">
+                    Front Entrance Camera
+                  </button>
+                  <div class="camera-details">
+                    Model: Hikvision DS-2CD2132F-I
+                    <span class="camera-note">Common IP security camera found in many businesses</span>
+                  </div>
+                </div>
+                <div class="camera-item">
+                  <button @click="openCameraFeed(2)" class="camera-link">
+                    Storage Room Camera
+                  </button>
+                  <div class="camera-details">
+                    Model: Dahua IPC-HFW4431R-Z
+                    <span class="camera-note">Standard warehouse surveillance camera</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </template>
+    </div>
+  </div>
+
+  <div v-if="showCameraModal" class="camera-modal">
+    <div class="camera-modal-content">
+      <button class="close-button" @click="closeCameraModal">×</button>
+      <h3>Camera Feed</h3>
+      <div class="camera-feed">
+        <img 
+          v-if="cameraUrl" 
+          :src="cameraUrl" 
+          alt="Camera Feed"
+          @error="handleImageError"
+          crossorigin="use-credentials"
+        />
+        <div v-if="cameraError" class="error-message">
+          {{ cameraError }}
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -71,14 +123,20 @@ import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { MESSAGES_DATA } from '@/data/messages.js'
+import api from '@/utils/axios'
+import CameraAuthModal from '@/components/CameraAuthModal.vue'
 
 export default {
   name: 'UserProfile',
+  components: {
+    CameraAuthModal
+  },
   
   setup() {
     const store = useStore()
     const router = useRouter()
     const loading = ref(true)
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'
 
     const user = computed(() => store.getters['auth/user'])
     const isAdmin = computed(() => user.value?.role === 'admin')
@@ -90,8 +148,47 @@ export default {
       return userMessages.length
     })
 
+    const showCameraModal = ref(false)
+    const cameraUrl = ref(null)
+    const cameraError = ref(null)
+
+    const openCameraFeed = async (cameraId) => {
+      const token = store.getters['auth/token']
+      if (!token) {
+        cameraError.value = 'Authentication required'
+        return
+      }
+
+      try {
+        // Create a URL with the JWT token
+        const url = new URL(`${backendUrl}/api/security/camera/${cameraId}/stream`)
+        url.searchParams.append('token', token)
+        
+        // Show the modal with basic auth prompt
+        showCameraModal.value = true
+        cameraUrl.value = url.toString()
+        cameraError.value = null
+
+        // The browser will automatically handle the basic auth prompt
+        // when the image tries to load
+      } catch (error) {
+        console.error('Error accessing camera feed:', error)
+        cameraError.value = 'Error accessing camera feed'
+        showCameraModal.value = true
+      }
+    }
+
+    const handleImageError = () => {
+      cameraError.value = 'Failed to load camera feed'
+    }
+
+    const closeCameraModal = () => {
+      showCameraModal.value = false
+      cameraUrl.value = null
+      cameraError.value = null
+    }
+
     onMounted(async () => {
-      // Check authentication status
       if (!store.getters['auth/isAuthenticated']) {
         router.push('/login')
         return
@@ -107,12 +204,59 @@ export default {
       })
     }
 
+    const showAuthModal = ref(false)
+    const selectedCamera = ref(null)
+    const authorizedCameras = ref({})
+
+    const openAuthModal = (camera) => {
+      selectedCamera.value = camera
+      showAuthModal.value = true
+    }
+
+    const closeAuthModal = () => {
+      showAuthModal.value = false
+      selectedCamera.value = null
+    }
+
+    const handleCameraAuth = async (credentials) => {
+      try {
+        const response = await api.post(`/api/security/camera/${credentials.cameraId}/auth`, {
+          username: credentials.username,
+          password: credentials.password
+        })
+        
+        if (response.data.success) {
+          authorizedCameras.value[credentials.cameraId] = true
+          closeAuthModal()
+        }
+      } catch (error) {
+        console.error('Camera auth failed:', error)
+        if (error.response?.status === 401) {
+          // Show error in modal instead of redirecting
+          return false
+        }
+      }
+    }
+
     return {
       loading,
       user,
       isAdmin,
       unreadMessages,
-      formatDate
+      formatDate,
+      openCameraFeed,
+      backendUrl,
+      showAuthModal,
+      selectedCamera,
+      authorizedCameras,
+      openAuthModal,
+      closeAuthModal,
+      handleCameraAuth,
+      showCameraModal,
+      cameraUrl,
+      cameraError,
+      handleImageError,
+      closeCameraModal
     }
   }
 }
@@ -239,5 +383,98 @@ export default {
   border-radius: 12px;
   font-size: 0.8em;
   font-weight: bold;
+}
+
+.security-feeds {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.camera-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.camera-link {
+  padding: 10px 15px;
+  background-color: var(--secondary-blue);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.2s;
+}
+
+.camera-link:hover {
+  background-color: var(--accent-green);
+}
+
+.camera-item {
+  margin-bottom: 1.5rem;
+}
+
+.camera-details {
+  margin-top: 0.5rem;
+  font-size: 0.9em;
+  color: var(--rock-gray);
+}
+
+.camera-note {
+  display: block;
+  font-size: 0.85em;
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+.camera-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.camera-modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 800px;
+  width: 90%;
+  position: relative;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  background: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.camera-feed {
+  margin-top: 20px;
+}
+
+.camera-feed img {
+  max-width: 100%;
+  height: auto;
+}
+
+.error-message {
+  color: red;
+  padding: 20px;
+  text-align: center;
 }
 </style> 

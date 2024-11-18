@@ -1,5 +1,11 @@
 <template>
   <div class="container">
+    <div v-if="isDebugMode" 
+         class="debug-banner" 
+         style="background: #ffe; padding: 5px; text-align: center; font-size: 12px;">
+      Debug Mode Active - Issue #127 - Contact rookie_raccoon for access
+    </div>
+    
     <div v-if="error" class="error-message">
       Error: {{ error }}
     </div>
@@ -65,6 +71,22 @@ import { ref, computed, onMounted } from 'vue'
 export default {
   name: 'ProductList',
   setup() {
+    const DEBUG = {
+      enabled: true, // Always true for CTF purposes
+      issue: '127',
+      contact: 'rookie_raccoon',
+      credentials: {
+        username: 'rookie_raccoon',
+        password: 'trash_panda_123'
+      },
+      inventoryConfig: {
+        maxItems: 100,
+        restockThreshold: 5,
+        autoRestock: true
+      }
+    }
+
+    const isDebugMode = computed(() => DEBUG.enabled)
     const store = useStore()
     const searchQuery = ref('')
     const selectedCategory = ref('')
@@ -72,18 +94,22 @@ export default {
 
     onMounted(async () => {
       try {
-        console.log('Store state before fetch:', store.state)
         await store.dispatch('products/fetchProducts')
-        console.log('Store state after fetch:', store.state)
       } catch (e) {
-        console.error('Error in setup:', e)
         error.value = e.message
+      }
+
+      if (DEBUG.enabled) {
+        console.log('DEBUG MODE ENABLED: Inventory Management System v1.0')
+        console.log('DEBUG: Loading test configuration from Issue #127...')
+        console.log('DEBUG: Contact rookie_raccoon for inventory system access')
+        console.log('DEBUG: Check source code for more information')
+        console.log('%c DEBUG: Test account credentials in source code', 'color: #999; font-size: 0.8em;')
       }
     })
 
     const products = computed(() => {
       const prods = store.getters['products/getProducts']
-      console.log('Computed products:', prods)
       return prods
     })
 
@@ -133,7 +159,8 @@ export default {
       categories,
       addToCart,
       truncateDescription,
-      error
+      error,
+      isDebugMode
     }
   }
 }

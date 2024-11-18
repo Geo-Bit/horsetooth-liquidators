@@ -18,8 +18,11 @@ const securityRoutes = require('./routes/security.routes')
 
 const app = express()
 
-// Middleware
-app.use(helmet())
+// Configure helmet with cross-origin-resource-policy
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}))
+
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? 'https://yourproductiondomain.com' 
@@ -28,8 +31,8 @@ app.use(cors({
 }))
 app.use(express.json())
 
-// Static files
-app.use(express.static(path.join(__dirname, '../dist')))
+// Static files for product images only
+app.use('/api/products/images', express.static(path.join(__dirname, 'public/product-images')))
 
 // Routes
 app.use('/api/auth', authRoutes)
@@ -37,13 +40,6 @@ app.use('/api/products', productRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/security', securityRoutes)
-
-// Serve frontend for any other route in production
-if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'))
-  })
-}
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {

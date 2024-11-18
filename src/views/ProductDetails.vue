@@ -3,6 +3,9 @@
     <div v-if="isLoading" class="loading">
       Loading product details...
     </div>
+    <div v-else-if="error" class="error">
+      {{ error }}
+    </div>
     <div v-else-if="product" class="product-details">
       <!-- Product Information Section -->
       <div class="product-main">
@@ -21,7 +24,7 @@
           
           <div class="actions">
             <button 
-              @click="addToCart(product)"
+              @click="addToCart"
               class="btn-add-cart"
               :disabled="product.inventory === 0">
               {{ product.inventory === 0 ? 'Out of Stock' : 'Add to Cart' }}
@@ -31,7 +34,7 @@
       </div>
 
       <!-- Reviews Section -->
-      <div class="reviews-section">
+      <div v-if="product.reviews" class="reviews-section">
         <h2>Customer Reviews</h2>
         
         <!-- Review Stats -->
@@ -43,49 +46,13 @@
                 ★
               </span>
             </div>
-            <span class="review-count">{{ reviews.length }} reviews</span>
+            <span class="review-count">{{ product.reviews.length }} reviews</span>
           </div>
-        </div>
-
-        <!-- Add Review Button -->
-        <button @click="showReviewForm = true" class="btn-add-review">
-          Write a Review
-        </button>
-
-        <!-- Review Form -->
-        <div v-if="showReviewForm" class="review-form">
-          <h3>Write Your Review</h3>
-          <form @submit.prevent="submitReview">
-            <div class="form-group">
-              <label>Rating</label>
-              <div class="rating-input">
-                <span v-for="n in 5" 
-                      :key="n"
-                      @click="newReview.rating = n"
-                      :class="{ active: newReview.rating >= n }"
-                      class="star">★</span>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Review</label>
-              <textarea 
-                v-model="newReview.comment"
-                required
-                rows="4"
-                placeholder="Share your thoughts about this product..."></textarea>
-            </div>
-            <div class="form-actions">
-              <button type="submit" class="btn-submit">Submit Review</button>
-              <button type="button" 
-                      @click="showReviewForm = false" 
-                      class="btn-cancel">Cancel</button>
-            </div>
-          </form>
         </div>
 
         <!-- Reviews List -->
         <div class="reviews-list">
-          <div v-for="review in reviews" 
+          <div v-for="review in product.reviews" 
                :key="review.id" 
                class="review-card">
             <div class="review-header">
@@ -112,182 +79,73 @@
       </router-link>
     </div>
   </div>
-
-  <div v-if="showFlag" class="flag-modal">
-    <div class="flag-content">
-      <h2>🎉 Congratulations!</h2>
-      <p>You successfully exploited the stored XSS vulnerability to steal the admin cookie!</p>
-      <p class="flag">Flag: {{ flag }}</p>
-      <button @click="showFlag = false" class="btn-close">Close</button>
-    </div>
-  </div>
-
-  <div v-if="showFlagModal" class="flag-modal">
-    <div class="flag-content">
-      <h2>🎉 Inventory Exploit Successful!</h2>
-      <p>You've discovered a vulnerability in our inventory system!</p>
-      <p class="flag">Flag: {{ flagMessage }}</p>
-      <button @click="showFlagModal = false" class="btn-close">Close</button>
-    </div>
-  </div>
-
-  <div class="inventory-debug" style="display: none;">
-    <!-- Hidden debug feature that allows inventory updates -->
-    <input type="number" 
-           :value="product.inventory"
-           @change="e => updateInventory(e.target.value)"
-           class="debug-input">
-  </div>
 </template>
 
 <script>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import api from '../utils/axios'  // Use our configured axios instance
+import { useRoute } from 'vue-router'
 
 export default {
   name: 'ProductDetails',
   setup() {
     const store = useStore()
     const route = useRoute()
-    const router = useRouter()
-    const user = computed(() => store.getters['auth/user'])
-    
-    // Get product data from store instead of direct import
-    const product = computed(() => {
-      const productId = parseInt(route.params.id)
-      return store.getters['products/getProducts'].find(p => p.id === productId)
-    })
-
-    // Use localStorage to store reviews per user
-    const getStorageKey = () => `reviews_${user.value?.username}_${route.params.id}`
-    
-    const reviews = ref([])
-    const newReview = ref({
-      rating: 0,
-      comment: '',
-      author: 'Anonymous'
-    })
-
-    const showReviewForm = ref(false)
-
-    const showFlag = ref(false)
-    const flag = ref('')
-
-    const showFlagModal = ref(false)
-    const flagMessage = ref('')
-
     const isLoading = ref(true)
-
-    onMounted(async () => {
-      try {
-        if (store.getters['products/getProducts'].length === 0) {
-          await store.dispatch('products/fetchProducts')
-        }
-      } finally {
-        isLoading.value = false
-      }
-
-      // Load reviews from localStorage for this user and product
-      const storedReviews = localStorage.getItem(getStorageKey())
-      // Combine stored reviews with product's default reviews
-      reviews.value = [
-        ...(storedReviews ? JSON.parse(storedReviews) : []),
-        ...(product.value?.reviews || [])
-      ]
-    })
-
-    const averageRating = computed(() => {
-      if (reviews.value.length === 0) return 0
-      const sum = reviews.value.reduce((acc, review) => acc + review.rating, 0)
-      return (sum / reviews.value.length).toFixed(1)
-    })
+    const product = ref(null)
+    const error = ref(null)
 
     const inventoryStatus = computed(() => {
+      if (!product.value) return ''
       if (product.value.inventory === 0) return 'Out of Stock'
-      if (product.value.inventory <= 2) return `Only ${product.value.inventory} left!`
+      if (product.value.inventory <= 2) return 'Low Stock!'
       return `${product.value.inventory} in stock`
     })
 
-    const addToCart = (product) => {
-      if (product.inventory > 0) {
-        store.dispatch('cart/addToCart', product)
-      }
-    }
-
-    // Create a secret admin cookie that's not easily visible
-    document.cookie = "admin_secret=super_sensitive_data;path=/;samesite=lax"
-
-    // Setup event listener for successful data exfiltration
-    window.addEventListener('message', (event) => {
-      // Check if the stolen cookie was successfully exfiltrated
-      if (event.data && event.data.includes('admin_secret=super_sensitive_data')) {
-        flag.value = 'noco{3b1b11d6f84e53d3c99327b324f506d9}'
-        showFlag.value = true
-      }
+    const averageRating = computed(() => {
+      if (!product.value?.reviews?.length) return 'No ratings yet'
+      const avg = product.value.reviews.reduce((acc, review) => acc + review.rating, 0) / product.value.reviews.length
+      return avg.toFixed(1)
     })
-
-    const submitReview = () => {
-      if (newReview.value.rating === 0) {
-        alert('Please select a rating')
-        return
-      }
-
-      // Intentionally don't sanitize input to allow XSS
-      reviews.value.unshift({
-        id: reviews.value.length + 1,
-        ...newReview.value,
-        date: new Date().toISOString().split('T')[0]
-      })
-
-      newReview.value = {
-        rating: 0,
-        comment: '',
-        author: user.value?.username || 'Anonymous'
-      }
-      showReviewForm.value = false
-    }
 
     const formatDate = (dateString) => {
       return new Date(dateString).toLocaleDateString()
     }
 
-    const updateInventory = async (newInventory) => {
-      try {
-        const response = await api.put(`/products/update-inventory/${product.value.id}`, {
-          inventory: newInventory
-        })
-        
-        // Check if we got a flag
-        if (response.data.flag) {
-          flagMessage.value = response.data.flag
-          showFlagModal.value = true
-        }
-        
-        // Update local product data
-        product.value.inventory = newInventory
-      } catch (error) {
-        console.error('Error updating inventory:', error)
+    const addToCart = () => {
+      if (product.value && product.value.inventory > 0) {
+        store.dispatch('cart/addToCart', product.value)
       }
     }
 
+    onMounted(async () => {
+      try {
+        const productId = parseInt(route.params.id)
+        await store.dispatch('products/fetchProducts')
+        const products = store.getters['products/getProducts']
+        const foundProduct = products.find(p => p.id === productId)
+        
+        if (foundProduct) {
+          product.value = foundProduct
+        } else {
+          error.value = 'Product not found'
+        }
+      } catch (err) {
+        console.error('Error loading product:', err)
+        error.value = 'Error loading product details'
+      } finally {
+        isLoading.value = false
+      }
+    })
+
     return {
       product,
-      reviews,
-      newReview,
-      showReviewForm,
-      averageRating,
+      isLoading,
+      error,
       inventoryStatus,
-      addToCart,
-      submitReview,
+      averageRating,
       formatDate,
-      showFlag,
-      flag,
-      updateInventory,
-      showFlagModal,
-      flagMessage,
-      isLoading
+      addToCart
     }
   }
 }

@@ -13,7 +13,8 @@ const getters = {
   isAuthenticated: state => !!state.token && !!state.user,
   user: state => state.user,
   isSuperAdmin: state => state.user?.role === 'super_admin',
-  isAdmin: state => ['admin', 'super_admin'].includes(state.user?.role)
+  isAdmin: state => ['admin', 'super_admin'].includes(state.user?.role),
+  token: state => state.token
 }
 
 const actions = {

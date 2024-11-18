@@ -9,7 +9,7 @@ const products = [
     "price": 129.99,
     "inventory": 3,
     "description": "Classic mechanical keyboard from IBM's golden era. Features the legendary buckling spring switches. Fully restored and USB-converted. A piece of computing history that still outperforms modern keyboards.",
-    "image": "https://picsum.photos/400/300?random=1",
+    "image": "http://localhost:3000/api/products/images/model-m-keyboard.jpg",
     "category": "Technology",
     "reviews": [
       {
