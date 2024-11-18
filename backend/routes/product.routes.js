@@ -22,9 +22,9 @@ const products = [
       {
         "id": 2,
         "rating": 4,
-        "comment": "Built like a tank! Though the IT guy who sold it to me seemed pretty stressed about letting it go...",
-        "author": "CyberHunter",
-        "date": "2024-02-10"
+        "comment": "Great system! Had to contact that new inventory guy (rookie_raccoon) about stock levels being wrong though. Hope they fix the inventory bugs soon!",
+        "author": "TechCollector",
+        "date": "2024-02-15"
       }
     ]
   },
@@ -404,7 +404,7 @@ router.put('/update-inventory/:id', (req, res) => {
   if (inventory >= 9999) {
     return res.json({
       message: 'Inventory updated',
-      flag: 'noco{1nv3nt0ry_g0n3_cr4zy_9999}'
+      flag: 'noco{8f7d2a1e4c6b9f3a5d8e2c7b4f1a9e6d}'
     })
   }
 

@@ -1,9 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const basicAuth = require('basic-auth')
 const path = require('path')
 const fs = require('fs')
-const { adminMiddleware } = require('../middleware/auth.middleware')
+const jwt = require('jsonwebtoken')
+const basicAuth = require('basic-auth')
 
 const cameras = {
   '1': {
@@ -22,46 +22,69 @@ const cameras = {
   }
 }
 
-// Basic auth middleware
-const cameraAuth = (req, res, next) => {
-  console.log('Basic auth middleware triggered')
-  const credentials = basicAuth(req)
-  const cameraId = req.params.cameraId
-  
-  if (!credentials || !cameras[cameraId]) {
-    // Include camera model in the realm to hint at default credentials
-    res.statusCode = 401
-    res.setHeader('WWW-Authenticate', 
-      `Basic realm="Security Camera Feed - ${cameras[cameraId]?.model || ''}"`)
-    res.setHeader('Content-Type', 'text/plain')
-    return res.end('Authentication required')
-  }
+const checkSlyFox = (req, res, next) => {
+  try {
+    // Get token from Authorization header or query parameter
+    let token = null
+    const authHeader = req.headers.authorization
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1]
+    } else if (req.query.token) {
+      token = req.query.token
+    }
 
-  console.log('Checking credentials:', credentials.name, credentials.pass)
-  
-  if (credentials.name === cameras[cameraId].username && 
-      credentials.pass === cameras[cameraId].password) {
+    if (!token) {
+      return res.status(401).send('Authentication required')
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-default-secret-key')
+    if (decoded.username !== 'sly_fox') {
+      return res.status(403).send('Access denied: Only sly_fox can access camera feeds')
+    }
+
     next()
-  } else {
-    res.statusCode = 401
-    res.setHeader('WWW-Authenticate', 
-      `Basic realm="Security Camera Feed - ${cameras[cameraId].model}"`)
-    res.setHeader('Content-Type', 'text/plain')
-    return res.end('Invalid credentials')
+  } catch (error) {
+    console.error('Auth error:', error)
+    return res.status(401).send('Invalid authentication')
   }
 }
 
-// Get camera stream (requires both JWT and basic auth)
-router.get('/camera/:cameraId/stream', cameraAuth, (req, res) => {
+const cameraAuth = (req, res, next) => {
   const cameraId = req.params.cameraId
-  console.log('Streaming camera:', cameraId)
+  const camera = cameras[cameraId]
   
+  if (!camera) {
+    return res.status(404).send('Camera not found')
+  }
+
+  const credentials = basicAuth(req)
+  
+  if (!credentials || 
+      credentials.name !== camera.username || 
+      credentials.pass !== camera.password) {
+    res.setHeader('WWW-Authenticate', 
+      `Basic realm="Security Camera ${cameraId}", charset="UTF-8"`)
+    return res.status(401).send('Camera authentication required')
+  }
+  
+  next()
+}
+
+// Use both auth middlewares and add CORS headers
+router.get('/camera/:cameraId/stream', checkSlyFox, cameraAuth, (req, res) => {
+  const cameraId = req.params.cameraId
   const imagePath = path.join(__dirname, `../public/camera-feeds/${cameras[cameraId].stream}`)
-  console.log('Image path:', imagePath)
   
   if (!fs.existsSync(imagePath)) {
     return res.status(404).send('Camera feed not found')
   }
+  
+  // Add CORS and resource policy headers
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173')
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
   
   res.sendFile(imagePath)
 })
