@@ -66,6 +66,10 @@
               <router-link to="/admin/orders" class="admin-link">
                 View Orders
               </router-link>
+              <router-link to="/admin/api-docs" class="admin-link api-docs-link">
+                API Documentation
+                <span class="debug-badge">DEBUG</span>
+              </router-link>
             </div>
 
             <!-- Security Camera Links -->
@@ -476,5 +480,13 @@ export default {
   color: red;
   padding: 20px;
   text-align: center;
+}
+
+.debug-badge {
+  background: #ffc107;
+  color: #000;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
 }
 </style> 

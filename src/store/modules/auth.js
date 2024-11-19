@@ -50,7 +50,7 @@ const actions = {
     }
   },
 
-  // Add this new action to check auth state
+  // Modify checkAuth to be more permissive
   async checkAuth({ commit, state }) {
     const token = state.token || localStorage.getItem('token')
     const storedUser = localStorage.getItem('user')
@@ -61,20 +61,20 @@ const actions = {
     }
 
     try {
-      // Set the token in axios headers
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      // Don't verify with backend, just decode the token
+      const base64Url = token.split('.')[1]
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+      const decodedToken = JSON.parse(window.atob(base64))
       
-      // Parse stored user
-      const user = JSON.parse(storedUser)
-      
-      // Verify token by fetching user profile
-      const response = await axios.get('http://localhost:3000/api/users/profile')
-      
-      // If verification successful, set the auth state
+      // Set auth state based on token contents
       commit('SET_AUTH_SUCCESS', { 
         token, 
-        user: response.data.user || user 
+        user: decodedToken 
       })
+      
+      // Update axios headers
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      
       return true
     } catch (error) {
       console.error('Auth check failed:', error)

@@ -23,7 +23,16 @@ const routes = [
   { path: '/profile', name: 'UserProfile', component: UserProfile, meta: { requiresAuth: true } },
   { path: '/inbox', name: 'inbox', component: UserInbox, meta: { requiresAuth: true } },
   { path: '/orders', name: 'OrderHistory', component: OrderHistory, meta: { requiresAuth: true } },
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound },
+  {
+    path: '/admin/api-docs',
+    name: 'AdminApiDocs',
+    component: () => import('@/views/AdminApiDocsPage.vue'),
+    meta: { 
+      requiresAuth: true,
+      requiresAdmin: true
+    }
+  }
 ];
 
 const router = createRouter({
@@ -33,20 +42,19 @@ const router = createRouter({
 
 // Navigation guard
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = store.getters['auth/isAuthenticated']
   const token = localStorage.getItem('token')
   
   // If route requires auth
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    // Check if user is authenticated or has valid token
-    if (!isAuthenticated && !token) {
+    // Only check if token exists, don't validate it
+    if (!token) {
       next({ name: 'Login' })
     } else {
       next()
     }
   } 
-  // If going to login/register while authenticated
-  else if ((to.name === 'Login' || to.name === 'Register') && isAuthenticated) {
+  // If going to login/register while having a token
+  else if ((to.name === 'Login' || to.name === 'Register') && token) {
     next({ name: 'Home' })
   }
   else {
