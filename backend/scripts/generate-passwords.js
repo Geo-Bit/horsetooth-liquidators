@@ -10,7 +10,7 @@ async function generateHash(password) {
 // Generate hashes for all passwords
 async function generateAllHashes() {
     await generateHash('Kj8#mP9$nQ2');  // mr_badger
-    await generateHash('Rx5#vL9$tM4');  // sly_fox
+    await generateHash('clever_fox_123');  // sly_fox
     await generateHash('trash_panda123'); // rookie_raccoon
 }
 

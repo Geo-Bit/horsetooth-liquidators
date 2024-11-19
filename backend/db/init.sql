@@ -12,7 +12,7 @@ TRUNCATE users RESTART IDENTITY CASCADE;
 -- Insert themed users with more secure passwords
 INSERT INTO users (username, password_hash, role) VALUES
 ('mr_badger', '$2b$10$qkHs83XudbIVqyJXP8ZKauC5DI44WYwZPdaMHPznnexBB6SQcW9Qm', 'super_admin'),  -- password: Kj8#mP9$nQ2
-('sly_fox', '$2b$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa', 'super_admin'),    -- password: clever_fox_123
+('sly_fox', '$2b$10$msFIaGa8rsd1idWuilE4B.uoHK6YMqz9nEX.KPaZ41AodK9XHoNbG', 'super_admin'),    -- password: clever_fox_123
 ('rookie_raccoon', '$2b$10$HhALUZvWxVXUhwVtStm1f.KJYdy4EX.INUv6OPvnQAlXFE9iNHUcO', 'user');    -- password: trash_panda123
 
 -- Note: You'll need to generate new hashes for these passwords
