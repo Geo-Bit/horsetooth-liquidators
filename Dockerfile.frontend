@@ -1,0 +1,40 @@
+# Build stage
+FROM node:18-alpine as builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy only frontend-related files
+COPY src/ ./src/
+COPY public/ ./public/
+COPY index.html ./
+COPY vite.config.js ./
+
+# Build the app
+RUN npm run build
+
+# Run stage
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install serve
+RUN npm install -g serve
+
+# Copy built files
+COPY --from=builder /app/dist ./dist
+
+# Create a non-root user
+RUN adduser -D static
+USER static
+
+# Expose port
+EXPOSE 8080
+
+# Start the app with explicit host binding
+CMD ["serve", "-s", "dist", "-l", "tcp://0.0.0.0:8080"] 

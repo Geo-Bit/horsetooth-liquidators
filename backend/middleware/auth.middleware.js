@@ -47,26 +47,19 @@ const adminMiddleware = (req, res, next) => {
     }
 }
 
-const superAdminMiddleware = (req, res, next) => {
+const superAdminMiddleware = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1]
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' })
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    
-    // Check for super_admin role
-    if (decoded.role !== 'super_admin') {
-      return res.status(403).json({
-        message: 'Access denied: Requires super admin permissions',
-        debug: 'Only super_admin users can access this endpoint'
-      })
-    }
-
-    next()
+    // Verify token first
+    await authMiddleware(req, res, async () => {
+      // Check if user is super_admin
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: 'Super Admin access required' })
+      }
+      next()
+    })
   } catch (error) {
-    res.status(401).json({ message: 'Invalid token' })
+    console.error('Super Admin middleware error:', error)
+    res.status(401).json({ message: 'Unauthorized' })
   }
 }
 

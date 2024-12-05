@@ -24,7 +24,8 @@
       <template v-else>
         <div class="profile-header">
           <h1>User Profile</h1>
-          <div v-if="isAdmin" class="admin-badge">Admin User</div>
+          <div v-if="isSuperAdmin" class="super-admin-badge">Super Admin</div>
+          <div v-else-if="isAdmin" class="admin-badge">Admin User</div>
         </div>
 
         <div class="profile-grid">
@@ -53,8 +54,13 @@
             </div>
           </div>
 
-          <!-- Admin Section -->
-          <div v-if="isAdmin" class="profile-card admin-section">
+          <!-- Super Admin Dashboard -->
+          <div v-if="isSuperAdmin" class="profile-card super-admin-section">
+            <SuperAdminDashboard />
+          </div>
+
+          <!-- Regular Admin Section -->
+          <div v-else-if="isAdmin" class="profile-card admin-section">
             <h2>Admin Controls</h2>
             <div class="admin-links">
               <router-link to="/admin/products" class="admin-link">
@@ -129,11 +135,13 @@ import { useRouter } from 'vue-router'
 import { MESSAGES_DATA } from '@/data/messages.js'
 import api from '@/utils/axios'
 import CameraAuthModal from '@/components/CameraAuthModal.vue'
+import SuperAdminDashboard from '@/components/SuperAdminDashboard.vue'
 
 export default {
   name: 'UserProfile',
   components: {
-    CameraAuthModal
+    CameraAuthModal,
+    SuperAdminDashboard
   },
   
   setup() {
@@ -144,6 +152,7 @@ export default {
 
     const user = computed(() => store.getters['auth/user'])
     const isAdmin = computed(() => user.value?.role === 'admin')
+    const isSuperAdmin = computed(() => user.value?.role === 'super_admin')
 
     // Add computed property for unread messages
     const unreadMessages = computed(() => {
@@ -246,6 +255,7 @@ export default {
       loading,
       user,
       isAdmin,
+      isSuperAdmin,
       unreadMessages,
       formatDate,
       openCameraFeed,
@@ -488,5 +498,13 @@ export default {
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.8em;
+}
+
+.super-admin-badge {
+  background-color: #dc3545;
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.9em;
 }
 </style> 

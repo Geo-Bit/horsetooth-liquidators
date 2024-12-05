@@ -1,6 +1,8 @@
 const express = require('express')
 const router = express.Router()
-const { authMiddleware, adminMiddleware } = require('../middleware/auth.middleware')
+const multer = require('multer')
+const path = require('path')
+const { authMiddleware, adminMiddleware, superAdminMiddleware } = require('../middleware/auth.middleware')
 
 // Public route
 router.get('/test', (req, res) => {
@@ -54,6 +56,35 @@ router.get('/debug/token-config', (req, res) => {
         signatureCheck: 'disabled',
         note: 'TODO: Enable signature verification before production - sly_fox'
     })
+})
+
+// Add file upload configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../uploads'))
+  },
+  filename: (req, file, cb) => {
+    const timestamp = Date.now()
+    cb(null, `${timestamp}-${file.originalname}`)
+  }
+})
+
+const upload = multer({ storage })
+
+// Super admin only route for file uploads
+router.post('/super-admin/upload', superAdminMiddleware, upload.single('file'), (req, res) => {
+  console.log('Upload request received')
+  console.log('User:', req.user)
+  console.log('File:', req.file)
+  
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file uploaded' })
+  }
+  
+  res.json({
+    message: 'File uploaded successfully',
+    file: req.file
+  })
 })
 
 module.exports = router

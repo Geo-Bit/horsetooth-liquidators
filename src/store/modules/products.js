@@ -13,10 +13,15 @@ const products = {
   actions: {
     async fetchProducts({ commit }) {
       try {
-        const response = await api.get('/products')  // Remove /api prefix since it's in baseURL
+        console.log('API URL:', import.meta.env.VITE_API_URL);
+        console.log('API instance baseURL:', api.defaults.baseURL);
+        
+        const response = await api.get('/api/products')  // Changed back to /api/products
+        console.log('API Response:', response);
         commit('SET_PRODUCTS', response.data.products)
       } catch (error) {
         console.error('Error fetching products:', error)
+        console.error('Error config:', error.config)  // This will show the full request config
       }
     }
   },

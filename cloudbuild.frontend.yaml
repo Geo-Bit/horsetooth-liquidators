@@ -1,0 +1,32 @@
+steps:
+  # Build the frontend container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/horsetooth-frontend',
+           '--file', 'Dockerfile.frontend',
+           '.']
+  
+  # Push the frontend container
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/horsetooth-frontend']
+  
+  # Deploy frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'horsetooth-frontend'
+    - '--image'
+    - 'gcr.io/$PROJECT_ID/horsetooth-frontend'
+    - '--region'
+    - 'us-central1'
+    - '--platform'
+    - 'managed'
+    - '--port'
+    - '8080'
+    - '--allow-unauthenticated'
+    - '--set-env-vars'
+    - 'VITE_API_URL=https://horsetooth-backend-885625737131.us-central1.run.app'
+
+images:
+  - 'gcr.io/$PROJECT_ID/horsetooth-frontend' 

@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine as builder
+FROM node:18-alpine3.18 as builder
 
 WORKDIR /app
 
@@ -22,34 +22,45 @@ COPY . .
 # Build the frontend
 RUN npm run build
 
+# Development stage for frontend
+FROM node:18-alpine3.18 as frontend-dev
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 5173
+CMD ["npm", "run", "dev", "--", "--host"]
+
 # Production stage
-FROM node:18-alpine
+FROM node:18-alpine as production
 
 WORKDIR /app
 
-# Install PostgreSQL client
+# Install PostgreSQL client only
 RUN apk add --no-cache postgresql-client
 
-# Copy backend files and built frontend
-COPY --from=builder /app/backend ./backend
-COPY --from=builder /app/dist ./dist
+# Copy package files first
+COPY --from=builder /app/backend/package*.json ./backend/
 
-# Copy wait-for-it script
-COPY backend/scripts/wait-for-it.sh /wait-for-it.sh
-RUN chmod +x /wait-for-it.sh
-
-# Install production dependencies and rebuild bcrypt
+# Install production dependencies
 WORKDIR /app/backend
 RUN apk add --no-cache python3 make g++ \
-    && npm install --production \
+    && npm ci --only=production \
     && npm rebuild bcrypt --build-from-source \
     && apk del python3 make g++
 
-# Move back to app directory
+# Now copy the rest of the backend files and frontend
 WORKDIR /app
+COPY --from=builder /app/backend ./backend
+COPY --from=builder /app/dist ./dist
 
-# Expose port
-EXPOSE 3000
+# Create uploads directory with node user permissions
+RUN mkdir -p /app/backend/uploads && \
+    chown -R node:node /app/backend/uploads && \
+    chmod 755 /app/backend/uploads
 
-# Start the application with wait-for-it
-CMD ["/wait-for-it.sh", "db", "node", "backend/server.js"]
+# Explicitly expose port 8080
+EXPOSE 8080
+
+# Remove the wait-for-it.sh dependency for Cloud Run
+CMD ["node", "backend/server.js"]

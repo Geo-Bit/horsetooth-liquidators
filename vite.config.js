@@ -11,25 +11,34 @@ export default defineConfig({
     }
   },
   server: {
+    host: true,
+    port: parseInt(process.env.PORT) || 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true
-      },
-      '/security': {
-        target: 'http://localhost:3000/api',
+        target: process.env.VITE_API_URL || 'http://localhost:8080',
         changeOrigin: true
       }
     }
   },
   build: {
-    sourcemap: false,  // Disable source maps
+    sourcemap: true,  // Add sourcemaps for debugging
     minify: 'terser',  // Use terser for better minification
     terserOptions: {
       compress: {
         drop_console: true,  // Remove console logs
         drop_debugger: true  // Remove debugger statements
       }
-    }
+    },
+    outDir: 'dist'
+  },
+  optimizeDeps: {
+    exclude: ['backend'],
+    entries: [
+      'src/**/*.vue',
+      'src/**/*.js'
+    ]
+  },
+  define: {
+    'import.meta.env.VITE_API_URL': JSON.stringify('https://horsetooth-backend-885625737131.us-central1.run.app')
   }
 })
