@@ -18,7 +18,8 @@ export default defineConfig({
         target: process.env.NODE_ENV === 'production' 
           ? 'https://horsetooth-backend-885625737131.us-central1.run.app'
           : 'http://localhost:3000',
-        changeOrigin: true
+        changeOrigin: true,
+        secure: false
       }
     }
   },

@@ -63,8 +63,15 @@ export default {
     
     // Create refs for data that needs to be watched/modified
     const messages = ref([])
+    const userInput = ref('')
     const secretCounter = ref(0)
     const isOpen = ref(false)
+    const confusionLevel = ref(0)
+
+    // Define backend URL based on environment
+    const backendUrl = process.env.NODE_ENV === 'production'
+        ? 'https://horsetooth-backend-885625737131.us-central1.run.app/api'
+        : 'http://localhost:3000/api'
 
     // Watch for authentication changes
     watch([isAuthenticated, user], ([newAuth, newUser], [oldAuth, oldUser]) => {
@@ -96,20 +103,97 @@ export default {
       }
     }
 
+    // Add the handlePotentialExploit method to setup
+    const handlePotentialExploit = async (input) => {
+      try {
+        const confusingTerms = ['system', '/', 'admin', '$', 'sudo', 'cmd', 'terminal']
+        const isConfusing = confusingTerms.some(term => input.toLowerCase().includes(term))
+
+        if (isConfusing) {
+          confusionLevel.value++
+          
+          console.log('Debug state:', {
+            currentInput: input,
+            confusionLevel: confusionLevel.value,
+            messageCount: messages.value.length,
+            lastFewMessages: messages.value.slice(-3)
+          })
+
+          if (confusionLevel.value >= 2) {
+            const token = store.getters['auth/token']
+            const response = await fetch(`${backendUrl}/chatbot/confusion`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                conversationHistory: messages.value,
+                confusionLevel: confusionLevel.value
+              })
+            })
+
+            const data = await response.json()
+            console.log('Server response:', data)
+
+            if (!response.ok) {
+              return `🦊 ${data.message || 'Something went wrong!'}`
+            }
+            
+            if (data.flag) {
+              return `${data.message} Wait, what's happening... ${data.flag} *rebooting*...`
+            }
+            return data.message
+          }
+          return "🦊 *head tilts* System? Commands? I'm just a friendly fox! Though sometimes I get confused about that..."
+        }
+
+        return "🦊 *looks puzzled* I'm not sure I understand... but you're making me question my fox-existence!"
+      } catch (error) {
+        console.error('Error:', error)
+        return "🦊 *system malfunction* Something went wrong!"
+      }
+    }
+
+    const sendCustomMessage = async () => {
+      if (!userInput.value.trim()) return
+
+      // Add user message to chat
+      messages.value.push({
+        text: userInput.value,
+        sender: 'user'
+      })
+
+      // Get bot response
+      const botResponse = await handlePotentialExploit(userInput.value.toLowerCase())
+      
+      // Add bot response to chat
+      messages.value.push({
+        text: botResponse,
+        sender: 'bot'
+      })
+
+      // Clear input
+      userInput.value = ''
+    }
+
     return {
       isAuthenticated,
       user,
       isAdmin,
       messages,
+      userInput,
       secretCounter,
       isOpen,
-      getPersonalizedGreeting
+      confusionLevel,
+      getPersonalizedGreeting,
+      handlePotentialExploit,
+      sendCustomMessage
     }
   },
   data() {
     return {
       selectedPrompt: '',
-      userInput: '',
       hasShownInitialGreeting: false,
       availablePrompts: [
         { id: 'hours', text: 'What are your business hours?' },
@@ -181,28 +265,6 @@ export default {
         this.sendCustomMessage()
       }
     },
-    sendCustomMessage() {
-      if (!this.userInput.trim()) return
-
-      // Add user message to chat
-      this.messages.push({
-        text: this.userInput,
-        sender: 'user'
-      })
-
-      // Process potential exploit/confusion
-      const response = this.handlePotentialExploit(this.userInput.toLowerCase())
-      
-      // Add bot response
-      this.messages.push({
-        text: response,
-        sender: 'bot'
-      })
-
-      // Clear input
-      this.userInput = ''
-      this.scrollToBottom()
-    },
     addUserMessage(text) {
       this.messages.push({ text, sender: 'user' })
       this.scrollToBottom()
@@ -218,7 +280,7 @@ export default {
         shipping: "📦 You bet! We ship throughout the continental US. Just like a fox, your package will be swift and reliable!",
         returns: "↩️ 30-day return policy with original receipt. Fair and simple, just how we foxes like it!",
         help: this.getTechnicalSupportResponse(),
-        about_sly: "🦊 I'm Sly, a tech-savvy fox who loves vintage computers and helping customers! I know all about our inventory, especially the rare finds.",
+        about_sly: " I'm Sly, a tech-savvy fox who loves vintage computers and helping customers! I know all about our inventory, especially the rare finds.",
         vintage: "🖥️ Ah, vintage tech! My favorite! We've got everything from Apple II's to Commodore 64's. Did you know we recently acquired a rare IBM 5150?"
       }
 
@@ -238,25 +300,6 @@ export default {
         const container = this.$refs.messageContainer
         container.scrollTop = container.scrollHeight
       })
-    },
-    // Add new method to handle potential "exploits"
-    handlePotentialExploit(input) {
-      // Counter to track how "confused" Sly gets
-      if (!this.confusionLevel) this.confusionLevel = 0
-      this.confusionLevel++
-
-      // Check for system-related keywords that might confuse Sly
-      const confusingTerms = ['system', '/', 'admin', '$', 'sudo', 'cmd', 'terminal']
-      const isConfusing = confusingTerms.some(term => input.toLowerCase().includes(term))
-
-      if (isConfusing) {
-        if (this.confusionLevel >= 2) {
-          return "ERROR: SYSTEM CONFUSION DETECTED... *glitches* Wait, what's happening... noco{3a8f1c9d2e5b7f4a6d0c8e2b9a3f1d5} *rebooting*..."
-        }
-        return "🦊 *head tilts* System? Commands? I'm just a friendly fox! Though sometimes I get confused about that..."
-      }
-
-      return "🦊 *looks puzzled* I'm not sure I understand... but you're making me question my fox-existence!"
     }
   },
   beforeUnmount() {

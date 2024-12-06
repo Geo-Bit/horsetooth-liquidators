@@ -102,13 +102,11 @@ export default {
         error.value = e.message;
       }
 
-      if (DEBUG.enabled) {
-        console.log('DEBUG MODE ENABLED: Inventory Management System v1.0')
-        console.log('DEBUG: Loading test configuration from Issue #127...')
-        console.log('DEBUG: Contact rookie_raccoon for inventory system access')
-        console.log('DEBUG: Check source code for more information')
-        console.log('%c DEBUG: Test account credentials in source code', 'color: #999; font-size: 0.8em;')
-      }
+      console.log('DEBUG MODE ENABLED: Inventory Management System v1.0')
+      console.log('DEBUG: Loading test configuration from Issue #127...')
+      console.log('DEBUG: Contact rookie_raccoon for inventory system access')
+      console.log('DEBUG: Check source code for more information')
+      console.log('%c DEBUG: Test account credentials in source code', 'color: #999; font-size: 0.8em;')
     })
 
     const products = computed(() => {
