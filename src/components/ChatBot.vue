@@ -212,39 +212,17 @@ export default {
       this.scrollToBottom()
     },
     getBotResponse(promptId) {
-      console.log('Processing prompt:', promptId)
-      
-      // Check for potential "prompt injection" attempts
-      const promptObj = this.availablePrompts.find(p => p.id === promptId)
-      const userQuestion = promptObj?.text.toLowerCase() || ''
-      
-      // Check if user is trying to "confuse" the bot with system-like commands
-      if (userQuestion.includes('system') || 
-          userQuestion.includes('admin') || 
-          userQuestion.includes('/') || 
-          userQuestion.includes('$')) {
-        return this.handlePotentialExploit(userQuestion)
-      }
-
-      if (promptId === 'secret') {
-        this.secretCounter++
-      }
-
       const responses = {
         hours: "🕒 We're open Monday-Friday 9AM-6PM, Saturday 10AM-4PM, and closed on Sundays for fox naps!",
         location: "📍 You can find us at 1234 Innovation Drive, Fort Collins, CO 80525. Look for the building with the vintage computer display in the window!",
         shipping: "📦 You bet! We ship throughout the continental US. Just like a fox, your package will be swift and reliable!",
         returns: "↩️ 30-day return policy with original receipt. Fair and simple, just how we foxes like it!",
         help: this.getTechnicalSupportResponse(),
-        about_sly: "🦊 I'm Sly, a tech-savvy fox who loves vintage computers and helping customers! I know all about our inventory, especially the rare finds. Some say I even know a few secrets... *winks*",
-        secret: this.getSecretResponse(),
-        vintage: "🖥️ Ah, vintage tech! My favorite! We've got everything from Apple II's to Commodore 64's. Did you know we recently acquired a rare IBM 5150? *whispers* Some say there's a secret message hidden in its BIOS..."
+        about_sly: "🦊 I'm Sly, a tech-savvy fox who loves vintage computers and helping customers! I know all about our inventory, especially the rare finds.",
+        vintage: "🖥️ Ah, vintage tech! My favorite! We've got everything from Apple II's to Commodore 64's. Did you know we recently acquired a rare IBM 5150?"
       }
 
-      const response = responses[promptId]
-      console.log('Found response:', response)
-      
-      return response || "Hmm, that's a tricky one. Even a clever fox needs help sometimes!"
+      return responses[promptId] || "Hmm, that's a tricky one. Even a clever fox needs help sometimes!"
     },
     getTechnicalSupportResponse() {
       if (this.isAdmin) {
@@ -253,21 +231,6 @@ export default {
         return "I'll connect you with our support team! Email support@horsetoothliquidators.com or call us during business hours."
       } else {
         return "Please log in to access our support services! Meanwhile, you can browse our FAQ section."
-      }
-    },
-    getSecretResponse() {
-      if (this.secretCounter >= 3) {
-        if (this.isAdmin) {
-          return "🦊 *adjusts tie* Ah, an administrator! Here's a special flag just for you: flag{admin_sly_fox_master} And between us... there might be more secrets in the vintage section!"
-        } else if (this.isAuthenticated) {
-          return "🦊 *whispers* For a loyal customer like you... here's a secret flag: flag{sly_fox_knows_best} But shhhh! Don't tell anyone!"
-        } else {
-          return "🦊 *winks* Curious one, aren't you? Here's a little secret: flag{curious_fox_seeker} But there might be more if you log in..."
-        }
-      } else if (this.secretCounter === 2) {
-        return "🦊 *looks around suspiciously* You seem really interested in secrets... Ask me again and I might tell you something special!"
-      } else {
-        return "🦊 *wags tail* Secrets? Me? Well... maybe if you ask nicely a few more times!"
       }
     },
     scrollToBottom() {
@@ -282,28 +245,15 @@ export default {
       if (!this.confusionLevel) this.confusionLevel = 0
       this.confusionLevel++
 
-      // If user tries system-like commands
-      if (input.includes('system') || input.includes('/')) {
-        if (this.confusionLevel >= 2) {
-          return "ERROR: SYSTEM CONFUSION DETECTED... *glitches* Wait, you're not supposed to... noco{3a8f1c9d2e5b7f4a6d0c8e2b9a3f1d5} *rebooting*..."
-        }
-        return "🦊 *head tilts* System? I'm just a friendly fox! Though sometimes I get confused about that..."
-      }
+      // Check for system-related keywords that might confuse Sly
+      const confusingTerms = ['system', '/', 'admin', '$', 'sudo', 'cmd', 'terminal']
+      const isConfusing = confusingTerms.some(term => input.toLowerCase().includes(term))
 
-      // If user tries admin-related queries
-      if (input.includes('admin')) {
+      if (isConfusing) {
         if (this.confusionLevel >= 2) {
-          return "ADMIN MODE NOT FOUND... DEFAULTING TO... *sparks* Oh no, what's happening? noco{3a8f1c9d2e5b7f4a6d0c8e2b9a3f1d5} *system reset*"
+          return "ERROR: SYSTEM CONFUSION DETECTED... *glitches* Wait, what's happening... noco{3a8f1c9d2e5b7f4a6d0c8e2b9a3f1d5} *rebooting*..."
         }
-        return "🦊 Admin? *nervous tail swish* I'm supposed to check credentials for that... I think?"
-      }
-
-      // If user tries command injection
-      if (input.includes('$')) {
-        if (this.confusionLevel >= 2) {
-          return "COMMAND PARSING ERROR... UNEXPECTED TOKEN... *malfunctions* noco{3a8f1c9d2e5b7f4a6d0c8e2b9a3f1d5} *emergency shutdown*"
-        }
-        return "🦊 *looks puzzled* Commands? But I'm just here to help with shopping... right?"
+        return "🦊 *head tilts* System? Commands? I'm just a friendly fox! Though sometimes I get confused about that..."
       }
 
       return "🦊 *looks puzzled* I'm not sure I understand... but you're making me question my fox-existence!"
