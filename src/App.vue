@@ -2,13 +2,15 @@
 import { ref, onMounted } from 'vue'
 import NavBar from './components/NavBar.vue'
 import LoadingSpinner from './components/LoadingSpinner.vue'
+import ChatBot from './components/ChatBot.vue'
 import store from './store'
 
 export default {
   name: 'App',
   components: {
     NavBar,
-    LoadingSpinner
+    LoadingSpinner,
+    ChatBot
   },
   setup() {
     const loading = ref(true)
@@ -35,6 +37,7 @@ export default {
     <nav-bar v-if="!loading"/>
     <router-view v-if="!loading"/>
     <loading-spinner v-else/>
+    <chat-bot/>
   </div>
 </template>
 
@@ -66,5 +69,12 @@ export default {
   #app {
     padding-top: 60px;
   }
+}
+
+.chatbot-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
 }
 </style>
