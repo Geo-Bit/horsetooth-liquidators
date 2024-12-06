@@ -15,15 +15,19 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://localhost:8080
+      - VITE_API_URL=http://localhost:3000
     command: npm run dev -- --host
     depends_on:
       - app
 
   app:
-    build: .
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend
     ports:
-      - "8080:8080"
+      - "3000:3000"
     environment:
       - NODE_ENV=development
       - DB_HOST=db
@@ -32,29 +36,22 @@ services:
       - DB_NAME=horsetooth_liquidators
       - JWT_SECRET=your_jwt_secret
       - CORS_ORIGIN=http://localhost:5173
-      - PORT=8080
+      - PORT=3000
     depends_on:
       - db
-    healthcheck:
-      test: ["CMD-SHELL", "PGPASSWORD=your_password pg_isready -h db -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   db:
+    platform: linux/amd64
     image: postgres:14-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: your_password
       POSTGRES_DB: horsetooth_liquidators
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
 volumes:
   postgres_data: 

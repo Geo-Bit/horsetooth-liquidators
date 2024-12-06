@@ -24,12 +24,21 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }))
 
-app.use(cors({
-  origin: 'https://horsetooth-frontend-885625737131.us-central1.run.app',
-  credentials: true,
+// Update CORS options to allow credentials
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || 'https://horsetooth-frontend-885625737131.us-central1.run.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}))
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Add OPTIONS handling for preflight requests
+app.options('*', cors(corsOptions));
+
 app.use(express.json())
 
 // Health check endpoint
@@ -90,5 +99,43 @@ process.on('SIGTERM', () => {
   server.close(() => {
     console.log('Server closed');
     process.exit(0);
+  });
+});
+
+// Add this near your server startup
+const BUILD_TIMESTAMP = new Date().toISOString();
+console.log(`Server starting - Build: ${BUILD_TIMESTAMP}`); 
+
+console.log('='.repeat(50));
+console.log(`BUILD TIMESTAMP: ${BUILD_TIMESTAMP}`);
+console.log('='.repeat(50));
+
+// Configure CORS before any routes
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'https://horsetooth-frontend-885625737131.us-central1.run.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+// Add a test endpoint to verify CORS
+app.get('/api/test-cors', (req, res) => {
+  console.log('CORS Test endpoint hit');
+  console.log('Origin:', req.headers.origin);
+  console.log('CORS_ORIGIN env:', process.env.CORS_ORIGIN);
+  res.json({ 
+    message: 'CORS test endpoint',
+    timestamp: BUILD_TIMESTAMP,
+    corsOrigin: process.env.CORS_ORIGIN,
+    headers: res.getHeaders() // This will show what headers are being set
+  });
+}); 
+
+// Add a test endpoint to verify image paths
+app.get('/api/test-image-path', (req, res) => {
+  res.json({
+    baseUrl: BASE_URL,
+    sampleImagePath: `${BASE_URL}/api/products/images/commodore64.jpg`,
+    environment: process.env.NODE_ENV
   });
 }); 

@@ -5,6 +5,10 @@ const pool = require('../config/database')
 class AuthController {
     async login(req, res) {
         try {
+            console.log('Login request received');
+            console.log('Headers:', req.headers);
+            console.log('Body:', req.body);
+            
             const { username, password } = req.body
             console.log('Login attempt for username:', username)
 

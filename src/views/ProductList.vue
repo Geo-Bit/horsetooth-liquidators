@@ -94,9 +94,12 @@ export default {
 
     onMounted(async () => {
       try {
-        await store.dispatch('products/fetchProducts')
+        console.log('Fetching products...');
+        await store.dispatch('products/fetchProducts');
+        console.log('Products fetched successfully');
       } catch (e) {
-        error.value = e.message
+        console.error('Error fetching products:', e);
+        error.value = e.message;
       }
 
       if (DEBUG.enabled) {

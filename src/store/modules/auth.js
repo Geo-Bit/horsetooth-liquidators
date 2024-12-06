@@ -3,6 +3,10 @@ import axios from 'axios'
 // Set default axios config
 axios.defaults.withCredentials = true
 
+const BASE_URL = process.env.NODE_ENV === 'production'
+  ? 'https://horsetooth-backend-885625737131.us-central1.run.app'
+  : 'http://localhost:3000';
+
 const state = {
   token: localStorage.getItem('token') || null,
   user: JSON.parse(localStorage.getItem('user')) || null,
@@ -21,7 +25,7 @@ const actions = {
   async login({ commit }, credentials) {
     try {
       console.log('Attempting login with:', credentials.username);
-      const response = await axios.post('http://localhost:3000/api/auth/login', credentials, {
+      const response = await axios.post(`${BASE_URL}/api/auth/login`, credentials, {
         withCredentials: true
       })
       const { token, user } = response.data

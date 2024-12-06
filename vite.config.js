@@ -15,7 +15,9 @@ export default defineConfig({
     port: parseInt(process.env.PORT) || 5173,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:8080',
+        target: process.env.NODE_ENV === 'production' 
+          ? 'https://horsetooth-backend-885625737131.us-central1.run.app'
+          : 'http://localhost:3000',
         changeOrigin: true
       }
     }
@@ -39,6 +41,8 @@ export default defineConfig({
     ]
   },
   define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify('https://horsetooth-backend-885625737131.us-central1.run.app')
+    'import.meta.env.VITE_API_URL': process.env.NODE_ENV === 'production'
+      ? JSON.stringify('https://horsetooth-backend-885625737131.us-central1.run.app')
+      : JSON.stringify('http://localhost:3000')
   }
 })

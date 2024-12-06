@@ -1,43 +1,28 @@
 steps:
-  # Build the backend container
+  # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/horsetooth-backend', 
-           '--file', 'Dockerfile', 
-           '--target', 'production', 
-           '.']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/horsetooth-backend', '--target', 'production', '.']
   
-  # Push the backend container
+  # Push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/horsetooth-backend']
   
-  # Deploy backend to Cloud Run
+  # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
-    - 'run'
-    - 'deploy'
-    - 'horsetooth-backend'
-    - '--image'
-    - 'gcr.io/$PROJECT_ID/horsetooth-backend'
-    - '--region'
-    - 'us-central1'
-    - '--platform'
-    - 'managed'
-    - '--port'
-    - '8080'
-    - '--allow-unauthenticated'
-    - '--add-cloudsql-instances'
-    - '${_INSTANCE_CONNECTION_NAME}'
-    - '--set-env-vars'
-    - 'DB_HOST=/cloudsql/${_INSTANCE_CONNECTION_NAME},DB_USER=${_DB_USER},DB_PASSWORD=${_DB_PASSWORD},DB_NAME=${_DB_NAME},NODE_ENV=production,CORS_ORIGIN=${_FRONTEND_URL},JWT_SECRET=${_JWT_SECRET},INSTANCE_CONNECTION_NAME=${_INSTANCE_CONNECTION_NAME}'
-
-substitutions:
-  _INSTANCE_CONNECTION_NAME: # will be provided at build time
-  _DB_PASSWORD: # will be provided at build time
-  _FRONTEND_URL: # will be provided at build time
-  _DB_USER: # will be provided at build time
-  _DB_NAME: # will be provided at build time
-  _JWT_SECRET: # will be provided at build time
+      - 'run'
+      - 'deploy'
+      - 'horsetooth-backend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/horsetooth-backend'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'NODE_ENV=production,DB_HOST=/cloudsql/${_INSTANCE_CONNECTION_NAME},DB_USER=${_DB_USER},DB_PASSWORD=${_DB_PASSWORD},DB_NAME=${_DB_NAME},INSTANCE_CONNECTION_NAME=${_INSTANCE_CONNECTION_NAME},CORS_ORIGIN=${_FRONTEND_URL},JWT_SECRET=${_JWT_SECRET}'
 
 images:
   - 'gcr.io/$PROJECT_ID/horsetooth-backend' 

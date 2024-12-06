@@ -1,66 +1,38 @@
-# Build stage
-FROM node:18-alpine3.18 as builder
-
+# Frontend builder stage
+FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Install build dependencies
 RUN apk add --no-cache python3 make g++
 
-# Copy package files first
+# Copy frontend package files
 COPY package*.json ./
-COPY backend/package*.json ./backend/
+RUN npm ci
 
-# Install all dependencies
-RUN npm install
-WORKDIR /app/backend
-RUN npm install
-WORKDIR /app
-
-# Copy all source files
+# Copy frontend source
 COPY . .
 
-# Build the frontend
-RUN npm run build
+# Build stage for bcrypt
+FROM --platform=linux/amd64 node:18-alpine AS bcrypt-builder
+WORKDIR /build
+RUN apk add --no-cache python3 make g++ gcc musl-dev
+COPY backend/package*.json ./
+RUN npm ci
+RUN npm rebuild bcrypt --build-from-source
 
-# Development stage for frontend
-FROM node:18-alpine3.18 as frontend-dev
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-EXPOSE 5173
-CMD ["npm", "run", "dev", "--", "--host"]
-
-# Production stage
-FROM node:18-alpine as production
-
-WORKDIR /app
-
-# Install PostgreSQL client only
-RUN apk add --no-cache postgresql-client
-
-# Copy package files first
-COPY --from=builder /app/backend/package*.json ./backend/
-
-# Install production dependencies
+# Production stage (renamed from backend to production)
+FROM --platform=linux/amd64 node:18-alpine AS production
 WORKDIR /app/backend
-RUN apk add --no-cache python3 make g++ \
-    && npm ci --only=production \
-    && npm rebuild bcrypt --build-from-source \
-    && apk del python3 make g++
 
-# Now copy the rest of the backend files and frontend
-WORKDIR /app
-COPY --from=builder /app/backend ./backend
-COPY --from=builder /app/dist ./dist
+# Copy package files and install dependencies
+COPY backend/package*.json ./
+RUN npm ci --only=production
 
-# Create uploads directory with node user permissions
-RUN mkdir -p /app/backend/uploads && \
-    chown -R node:node /app/backend/uploads && \
-    chmod 755 /app/backend/uploads
+# Copy bcrypt from builder
+COPY --from=bcrypt-builder /build/node_modules/bcrypt ./node_modules/bcrypt
 
-# Explicitly expose port 8080
-EXPOSE 8080
+# Copy application files
+COPY backend/ .
 
-# Remove the wait-for-it.sh dependency for Cloud Run
-CMD ["node", "backend/server.js"]
+EXPOSE 3000
+CMD ["node", "server.js"]

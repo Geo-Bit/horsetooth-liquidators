@@ -1,6 +1,19 @@
 const express = require('express')
 const router = express.Router()
 
+// Add at the top of the file
+const BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://horsetooth-backend-885625737131.us-central1.run.app'
+  : 'http://localhost:3000';
+
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production'
+    ? 'https://horsetooth-frontend-885625737131.us-central1.run.app'
+    : 'http://localhost:5173',
+  methods: ['GET', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
 // Move product data directly into the API
 const products = [
   {
@@ -9,7 +22,7 @@ const products = [
     "price": 129.99,
     "inventory": 3,
     "description": "Classic mechanical keyboard from IBM's golden era. Features the legendary buckling spring switches. Fully restored and USB-converted. A piece of computing history that still outperforms modern keyboards.",
-    "image": "http://localhost:3000/api/products/images/model-m-keyboard.jpg",
+    "image": `${BASE_URL}/api/products/images/model-m-keyboard.jpg`,
     "category": "Technology",
     "reviews": [
       {
@@ -34,7 +47,7 @@ const products = [
     "price": 449.99,
     "inventory": 1,
     "description": "Authentic industrial scale from the old Fort Collins Sugar Beet factory (circa 1903). A rare piece of local history, fully restored and functional. Perfect for display or conversation piece.",
-    "image": "http://localhost:3000/api/products/images/beet-scale.jpg",
+    "image": `${BASE_URL}/api/products/images/beet-scale.jpg`,
     "category": "Local History",
     "reviews": [
       {
@@ -59,7 +72,7 @@ const products = [
     "price": 799.99,
     "inventory": 2,
     "description": "Fully working Macintosh SE/30 with original 40MB hard drive and 4MB RAM. Includes original keyboard and mouse. Recently serviced and capacitors replaced.",
-    "image": "http://localhost:3000/api/products/images/mac-se30.webp",
+    "image": `${BASE_URL}/api/products/images/mac-se30.webp`,
     "category": "Technology",
     "reviews": [
       {
@@ -84,7 +97,7 @@ const products = [
     "price": 299.99,
     "inventory": 1,
     "description": "Original surveying transit used in the 1950s Horsetooth area development. Brass construction with leather case. A unique piece of local surveying history.",
-    "image": "http://localhost:3000/api/products/images/survey-equipment.webp",
+    "image": `${BASE_URL}/api/products/images/survey-equipment.webp`,
     "category": "Local History",
     "reviews": [
       {
@@ -109,7 +122,7 @@ const products = [
     "price": 349.99,
     "inventory": 2,
     "description": "Working Commodore 64 with 1541 disk drive, monitor, and original software collection. The best-selling computer model of all time, ready for retro gaming.",
-    "image": "http://localhost:3000/api/products/images/commodore64.jpg",
+    "image": `${BASE_URL}/api/products/images/commodore64.jpg`,
     "category": "Technology",
     "reviews": [
       {
@@ -134,7 +147,7 @@ const products = [
     "price": 599.99,
     "inventory": 1,
     "description": "Professional-grade microscope from CSU's early veterinary program. Zeiss optics, excellent condition. Includes original wooden case and accessories.",
-    "image": "http://localhost:3000/api/products/images/microscope.jpg",
+    "image": `${BASE_URL}/api/products/images/microscope.jpg`,
     "category": "Scientific",
     "reviews": [
       {
@@ -159,7 +172,7 @@ const products = [
     "price": 899.99,
     "inventory": 1,
     "description": "Original small-batch brewing equipment from New Belgium's early days. Includes copper vessels and original thermometers. A piece of Fort Collins brewing history.",
-    "image": "http://localhost:3000/api/products/images/brewing-equipment.jpg",
+    "image": `${BASE_URL}/api/products/images/brewing-equipment.jpg`,
     "category": "Local History",
     "reviews": [
       {
@@ -184,7 +197,7 @@ const products = [
     "price": 699.99,
     "inventory": 1,
     "description": "Professional 3D graphics workstation from the 90s. Used in early CGI production. Fully functional with original software.",
-    "image": "http://localhost:3000/api/products/images/indigo2.jpg",
+    "image": `${BASE_URL}/api/products/images/indigo2.jpg`,
     "category": "Technology",
     "reviews": [
       {
@@ -209,7 +222,7 @@ const products = [
     "price": 1299.99,
     "inventory": 1,
     "description": "Original metal sign from when CSU was still Colorado A&M College (pre-1957). Excellent condition with original paint and mounting hardware.",
-    "image": "http://localhost:3000/api/products/images/csu-am-sign.jpg",
+    "image": `${BASE_URL}/api/products/images/csu-am-sign.jpg`,
     "category": "Local History",
     "reviews": [
       {
@@ -234,7 +247,7 @@ const products = [
     "price": 249.99,
     "inventory": 3,
     "description": "The world's first scientific pocket calculator from HP (1972). Fully functional with original case and manual. A cornerstone of Silicon Valley history.",
-    "image": "http://localhost:3000/api/products/images/hp35-calculator.jpg",
+    "image": `${BASE_URL}/api/products/images/hp35-calculator.jpg`,
     "category": "Technology",
     "reviews": [
       {
@@ -259,7 +272,7 @@ const products = [
     "price": 159.99,
     "inventory": 2,
     "description": "Authentic conductor's bell from the Fort Collins trolley system (early 1900s). Brass construction with original patina.",
-    "image": "http://localhost:3000/api/products/images/trolley-bell.jpg",
+    "image": `${BASE_URL}/api/products/images/trolley-bell.jpg`,
     "category": "Local History",
     "reviews": [
       {
@@ -284,7 +297,7 @@ const products = [
     "price": 2999.99,
     "inventory": 1,
     "description": "Complete NeXT Computer system from Steve Jobs' other company. The platform where the first web browser was developed. Includes original monitor and accessories.",
-    "image": "http://localhost:3000/api/products/images/next-computer.jpg",
+    "image": `${BASE_URL}/api/products/images/next-computer.jpg`,
     "category": "Technology",
     "reviews": [
       {
@@ -309,7 +322,7 @@ const products = [
     "price": 399.99,
     "inventory": 2,
     "description": "Vintage scuba gear used by early Horsetooth Reservoir maintenance divers. Includes original regulators and depth gauges from the 1960s.",
-    "image": "http://localhost:3000/api/products/images/diving-equipment.jpg",
+    "image": `${BASE_URL}/api/products/images/diving-equipment.jpg`,
     "category": "Local History",
     "reviews": [
       {
@@ -334,7 +347,7 @@ const products = [
     "price": 449.99,
     "inventory": 2,
     "description": "High-end Unix workstation from the mid-90s. Popular in scientific and engineering applications. Includes original keyboard and mouse.",
-    "image": "http://localhost:3000/api/products/images/sparcstation-computer.jpg",
+    "image": `${BASE_URL}/api/products/images/sparcstation-computer.jpg`,
     "category": "Technology",
     "reviews": [
       {
@@ -359,7 +372,7 @@ const products = [
     "price": 599.99,
     "inventory": 1,
     "description": "HP 120B oscilloscope from the company's early days. Fully functional and calibrated. A testament to HP's engineering excellence.",
-    "image": "http://localhost:3000/api/products/images/hp120b-oscilloscope.jpg",
+    "image": `${BASE_URL}/api/products/images/hp120b-oscilloscope.jpg`,
     "category": "Technology",
     "reviews": [
       {
@@ -381,9 +394,14 @@ const products = [
   // ... other products ...
 ]
 
-// GET all products
+// GET all products - remove authentication requirement
 router.get('/', (req, res) => {
-  res.json({ products })
+  // Add CORS headers explicitly for this route
+  res.header('Access-Control-Allow-Origin', process.env.CORS_ORIGIN || 'https://horsetooth-frontend-885625737131.us-central1.run.app');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  res.json({ products });
 })
 
 // Vulnerable inventory update endpoint
@@ -415,5 +433,11 @@ router.put('/update-inventory/:id', (req, res) => {
 router.get('/test', (req, res) => {
   res.json({ message: 'Product API is working' })
 })
+
+// Add this near your other routes
+router.get('/health', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.json({ status: 'ok', message: 'Product API is healthy' });
+});
 
 module.exports = router
