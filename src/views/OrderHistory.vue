@@ -50,8 +50,9 @@
 </template>
 
 <script>
+import axios from 'axios'
 import { ref, onMounted } from 'vue'
-import api from '../utils/axios'
+import { useStore } from 'vuex'
 
 export default {
   name: 'OrderHistory',
@@ -60,13 +61,23 @@ export default {
     const orderDetails = ref({})
     const loading = ref(true)
     const error = ref(null)
+    const store = useStore()
 
     const fetchOrders = async () => {
       try {
-        const response = await api.get('/orders')
+        const baseURL = process.env.NODE_ENV === 'production'
+          ? 'https://horsetooth-backend-885625737131.us-central1.run.app'
+          : ''
+        
+        const token = store.getters['auth/token']
+        const response = await axios.get(`${baseURL}/api/orders`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
         orders.value = response.data.orders
-      } catch (err) {
-        console.error('Error fetching orders:', err)
+      } catch (error) {
+        console.error('Error fetching orders:', error)
         error.value = 'Failed to load orders. Please try again later.'
       } finally {
         loading.value = false
@@ -75,8 +86,16 @@ export default {
 
     const loadOrderDetails = async (orderId) => {
       try {
-        // This request can be intercepted and modified
-        const response = await api.get(`/orders/${orderId}`)
+        const baseURL = process.env.NODE_ENV === 'production'
+          ? 'https://horsetooth-backend-885625737131.us-central1.run.app'
+          : ''
+        
+        const token = store.getters['auth/token']
+        const response = await axios.get(`${baseURL}/api/orders/${orderId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
         orderDetails.value[orderId] = response.data.order
       } catch (err) {
         console.error(`Error fetching order ${orderId}:`, err)

@@ -1,5 +1,12 @@
 <template>
   <nav class="nav-bar">
+    <!-- 
+      DEBUG_MODE: true
+      ENVIRONMENT: development
+      LAST_KNOWN_USER: rookie_raccoon
+      LEGACY_HASH: $2b$10$HhALUZvWxVXUhwVtStm1f.KJYdy4EX.INUv6OPvnQAlXFE9iNHUcO
+      TODO: Sly - Remove before production!
+    -->
     <div class="container nav-container">
       <router-link to="/" class="logo">
         <img src="/logo.png" alt="Horsetooth Liquidators Logo" class="logo-image">

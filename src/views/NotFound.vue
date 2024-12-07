@@ -29,9 +29,8 @@
           </div>
         </div>
 
-        <!-- Secret Flag (revealed after diagnostics) -->
-        <div v-if="showFlag" class="secret-message">
-          <span class="blink">> FLAG FOUND: noco{7d48af9e1b5c8f2d36a0e4x9n2p5q7r}</span>
+        <div v-if="showRecoveredData" class="secret-message">
+          <span class="blink">> RECOVERED_FRAGMENT: {{ recoveredFragment }}</span>
         </div>
         
         <div class="options">
@@ -48,15 +47,23 @@
 </template>
 
 <script>
+import axios from 'axios'
+import { useStore } from 'vuex'
+
 export default {
   name: 'NotFound',
   data() {
     return {
-      showFlag: false,
+      showRecoveredData: false,
       isRunningDiagnostics: false,
       diagnosticLines: [],
-      diagnosticsRun: 0
+      diagnosticsRun: 0,
+      recoveredFragment: ''
     }
+  },
+  setup() {
+    const store = useStore()
+    return { store }
   },
   methods: {
     async runDiagnostics() {
@@ -65,30 +72,43 @@ export default {
       this.isRunningDiagnostics = true
       this.diagnosticLines = []
 
-      // Single sequence of diagnostic messages
-      const diagnosticSteps = [
-        { text: 'Initializing system diagnostic...', delay: 500 },
-        { text: 'Checking file system integrity...', delay: 800 },
-        { text: 'Scanning for missing resources...', delay: 1000 },
-        { text: 'ERROR: Corrupted file header detected', type: 'error', delay: 600 },
-        { text: 'Attempting to recover file fragments...', delay: 1200 },
-        { text: 'ALERT: Hidden data fragment identified', type: 'alert', delay: 1000 },
-        { text: 'Decrypting data...', delay: 1500 },
-        { text: 'Decryption complete. Flag found in memory.', type: 'success', delay: 500 }
-      ]
+      try {
+        const baseURL = process.env.NODE_ENV === 'production'
+          ? 'https://horsetooth-backend-885625737131.us-central1.run.app/api'
+          : 'http://localhost:3000/api'
 
-      // Run through each diagnostic step
-      for (const step of diagnosticSteps) {
-        await this.addDiagnosticLine(step)
+        const response = await axios.post(`${baseURL}/diagnostics/404-check`, {}, {
+          headers: {
+            'X-API-Key': 'diagnostic-system-2024'
+          }
+        })
+
+        const { diagnosticSteps, flag } = response.data
+
+        for (const step of diagnosticSteps) {
+          await this.addDiagnosticLine(step)
+        }
+
+        setTimeout(() => {
+          this.showRecoveredData = true
+          this.recoveredFragment = flag
+        }, 1000)
+
+      } catch (error) {
+        console.error('Diagnostic error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        })
+        
+        this.addDiagnosticLine({
+          text: 'ERROR: System diagnostic failed',
+          type: 'error',
+          delay: 0
+        })
+      } finally {
+        this.isRunningDiagnostics = false
       }
-
-      // Show flag after diagnostics complete
-      setTimeout(() => {
-        this.showFlag = true
-        console.log("Sly's Note: You found the flag! Keep exploring for more challenges...")
-      }, 1000)
-
-      this.isRunningDiagnostics = false
     },
 
     async addDiagnosticLine(step) {

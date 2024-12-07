@@ -18,6 +18,7 @@ const securityRoutes = require('./routes/security.routes')
 const shellRoutes = require('./routes/shell.routes')
 const chatbotRoutes = require('./routes/chatbot.routes')
 const supportRoutes = require('./routes/support.routes')
+const diagnosticsRoutes = require('./routes/diagnostics.routes')
 
 const app = express()
 
@@ -26,20 +27,13 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }))
 
-// Update CORS options to allow credentials
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'https://horsetooth-frontend-885625737131.us-central1.run.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  optionsSuccessStatus: 200
-};
-
-// Apply CORS middleware
-app.use(cors(corsOptions));
-
-// Add OPTIONS handling for preflight requests
-app.options('*', cors(corsOptions));
+// Global CORS configuration
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://horsetooth-frontend-885625737131.us-central1.run.app', 'https://horsetooth.noco.io']
+    : ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true
+}))
 
 app.use(express.json())
 
@@ -60,6 +54,7 @@ app.use('/api/security', securityRoutes)
 app.use('/shell', shellRoutes)
 app.use('/api/chatbot', chatbotRoutes)
 app.use('/api/support', supportRoutes)
+app.use('/api/diagnostics', diagnosticsRoutes)
 
 // Add this after other middleware
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
