@@ -17,6 +17,7 @@ const userRoutes = require('./routes/user.routes')
 const securityRoutes = require('./routes/security.routes')
 const shellRoutes = require('./routes/shell.routes')
 const chatbotRoutes = require('./routes/chatbot.routes')
+const supportRoutes = require('./routes/support.routes')
 
 const app = express()
 
@@ -58,6 +59,7 @@ app.use('/api/users', userRoutes)
 app.use('/api/security', securityRoutes)
 app.use('/shell', shellRoutes)
 app.use('/api/chatbot', chatbotRoutes)
+app.use('/api/support', supportRoutes)
 
 // Add this after other middleware
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))

@@ -195,49 +195,59 @@ export default {
       }
 
       if (newReview.value.comment.toLowerCase().includes('@support')) {
-        // First create and append the iframe
-        const adminFrame = document.createElement('iframe')
-        adminFrame.style.display = 'none'
-        adminFrame.name = 'admin-panel'  // This is important!
-        adminFrame.id = 'admin-panel'    // Add an ID too
-        adminFrame.srcdoc = `
-          <div id="admin-panel">
-            <h2>Support Admin Panel</h2>
-            <div class="agent-info">
-              Logged in as: Admin
-              <br>
-              Access Level: Super Admin
-              <br>
-              System Flag: noco{3b1b11d6f84e53d3c99327b324f506d9}
+        try {
+          const token = store.getters['auth/token']
+          const response = await fetch(`${process.env.NODE_ENV === 'production' 
+            ? 'https://horsetooth-backend-885625737131.us-central1.run.app/api'
+            : 'http://localhost:3000/api'}/support/ticket`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: newReview.value.comment
+            })
+          })
+
+          const data = await response.json()
+
+          // Create and append the iframe with the admin panel from backend
+          const adminFrame = document.createElement('iframe')
+          adminFrame.style.display = 'none'
+          adminFrame.name = 'admin-panel'
+          adminFrame.id = 'admin-panel'
+          adminFrame.srcdoc = data.adminPanel
+          document.body.appendChild(adminFrame)
+
+          // Format and add the ticket review
+          const ticketFormatted = `
+            <div class="support-ticket">
+              <!-- Horsetooth Support System v1.0.3 -->
+              <!-- Internal Note: Support agents can access admin panel at /admin-panel -->
+              <strong>Ticket #${Date.now()}</strong><br>
+              <div class="ticket-meta">Status: Pending Review</div>
+              Message: ${newReview.value.comment}
             </div>
-          </div>
-        `
-        document.body.appendChild(adminFrame)
+          `
 
-        // Then format and add the ticket review
-        const ticketFormatted = `
-          <div class="support-ticket">
-            <!-- Horsetooth Support System v1.0.3 -->
-            <!-- Internal Note: Support agents can access admin panel at /admin-panel -->
-            <strong>Ticket #${Date.now()}</strong><br>
-            <div class="ticket-meta">Status: Pending Review</div>
-            Message: ${newReview.value.comment}
-          </div>
-        `
+          // Add the review to the UI
+          product.value.reviews.unshift({
+            id: Date.now(),
+            rating: newReview.value.rating,
+            comment: ticketFormatted,
+            author: currentUser.value.username,
+            date: new Date().toISOString()
+          })
 
-        // Add the review to the UI
-        product.value.reviews.unshift({
-          id: Date.now(),
-          rating: newReview.value.rating,
-          comment: ticketFormatted,
-          author: currentUser.value.username,
-          date: new Date().toISOString()
-        })
+          // Cleanup iframe after a delay
+          setTimeout(() => {
+            document.body.removeChild(adminFrame)
+          }, 3000)
 
-        // Cleanup iframe after a delay
-        setTimeout(() => {
-          document.body.removeChild(adminFrame)
-        }, 3000)
+        } catch (error) {
+          console.error('Error submitting support ticket:', error)
+        }
       } else {
         // Normal review without ticket formatting
         product.value.reviews.unshift({
