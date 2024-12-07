@@ -1,51 +1,67 @@
 <template>
-  <div class="api-docs">
+  <div class="api-docs" v-if="apiDocs">
     <h2>API Documentation</h2>
     <div class="api-version">
-      <span class="version-badge">v1.0</span>
-      <span class="debug-badge">DEBUG MODE</span>
+      <span class="version-badge">{{ apiDocs.version }}</span>
+      <span class="debug-badge" v-if="apiDocs.debugMode">DEBUG MODE</span>
     </div>
 
     <div class="endpoint-list">
-      <!-- User Management -->
       <div class="endpoint-group">
         <h3>🔐 User Management</h3>
         
-        <div class="endpoint">
-          <div class="method get">GET</div>
-          <div class="path">/api/users/admin-dashboard</div>
+        <div v-for="endpoint in apiDocs.endpoints" :key="endpoint.path" class="endpoint">
+          <div class="method get">{{ endpoint.method }}</div>
+          <div class="path">{{ endpoint.path }}</div>
           <div class="description">
-            Get admin dashboard data including user details
+            {{ endpoint.description }}
             <div class="response-preview">
-              <pre>
-{
-  "adminData": {
-    "users": [
-      {
-        "username": "sly_fox",
-        "role": "admin",
-        "passwordHash": "***********",
-        // ... other sensitive data
-      }
-    ]
-  }
-}
-              </pre>
+              <pre>{{ JSON.stringify(endpoint.sampleResponse, null, 2) }}</pre>
             </div>
             <span class="debug-note">⚠️ Note: Contains sensitive user data in debug mode</span>
           </div>
-        </div>
-
-        <!-- Add other endpoints -->
-        <div class="endpoint">
-          <div class="method get">GET</div>
-          <div class="path">/api/users/profile</div>
-          <div class="description">Get user profile data</div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<script>
+import axios from 'axios'
+import { ref, onMounted } from 'vue'
+import { useStore } from 'vuex'
+
+export default {
+  setup() {
+    const store = useStore()
+    const apiDocs = ref(null)
+
+    const fetchApiDocs = async () => {
+      try {
+        const baseURL = process.env.NODE_ENV === 'production'
+          ? 'https://horsetooth-backend-885625737131.us-central1.run.app'
+          : 'http://localhost:3000'
+        
+        const token = store.getters['auth/token']
+        const response = await axios.get(`${baseURL}/api/admin/api-docs`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        apiDocs.value = response.data
+      } catch (error) {
+        console.error('Error fetching API docs:', error)
+      }
+    }
+
+    onMounted(fetchApiDocs)
+
+    return {
+      apiDocs
+    }
+  }
+}
+</script>
 
 <style scoped>
 .api-docs {

@@ -78,30 +78,6 @@
               </router-link>
             </div>
 
-            <!-- Security Camera Links -->
-            <div class="security-feeds">
-              <h3>Security Feeds</h3>
-              <div class="camera-links">
-                <div class="camera-item">
-                  <button @click="openCameraFeed(1)" class="camera-link">
-                    Front Entrance Camera
-                  </button>
-                  <div class="camera-details">
-                    Model: Hikvision DS-2CD2132F-I
-                    <span class="camera-note">Common IP security camera found in many businesses</span>
-                  </div>
-                </div>
-                <div class="camera-item">
-                  <button @click="openCameraFeed(2)" class="camera-link">
-                    Storage Room Camera
-                  </button>
-                  <div class="camera-details">
-                    Model: Dahua IPC-HFW4431R-Z
-                    <span class="camera-note">Standard warehouse surveillance camera</span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </template>
