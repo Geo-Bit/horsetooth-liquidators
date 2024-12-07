@@ -6,6 +6,16 @@
       <span class="debug-badge" v-if="apiDocs.debugMode">DEBUG MODE</span>
     </div>
 
+    <div v-if="apiDocs.ctfChallenge" class="ctf-challenge">
+      <h3>🚩 CTF Challenge Complete!</h3>
+      <div class="challenge-details">
+        <p>{{ apiDocs.ctfChallenge.message }}</p>
+        <div class="flag">
+          Flag: <code>{{ apiDocs.ctfChallenge.flag }}</code>
+        </div>
+      </div>
+    </div>
+
     <div class="endpoint-list">
       <div class="endpoint-group">
         <h3>🔐 User Management</h3>
@@ -136,5 +146,31 @@ export default {
   margin-top: 8px;
   color: #dc3545;
   font-size: 0.9em;
+}
+
+.ctf-challenge {
+  background: #d4edda;
+  border: 2px dashed #28a745;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.challenge-details {
+  margin-top: 10px;
+}
+
+.flag {
+  margin-top: 15px;
+  font-family: monospace;
+  font-size: 1.2em;
+  background: #fff;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.flag code {
+  color: #28a745;
+  font-weight: bold;
 }
 </style> 

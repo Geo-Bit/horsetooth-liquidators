@@ -18,10 +18,24 @@ router.options('/api-docs', cors(corsOptions))
 router.get('/api-docs', cors(corsOptions), adminMiddleware, async (req, res) => {
   try {
     const apiDocs = {
-      version: "v1.0",
+      version: "1.0",
+      environment: process.env.NODE_ENV,
       debugMode: true,
-      lastUpdated: "2024-03-10",
-      updatedBy: "rookie_raccoon",
+      ctfChallenge: {
+        name: "JWT Token Challenge",
+        status: "COMPLETED",
+        flag: "noco{3d35e2b64d5300c61c179814a9ca2460}",
+        message: "Congratulations! You've successfully modified your JWT token to gain admin access."
+      },
+      adminUsers: [
+        {
+          username: "sly_fox",
+          role: "admin",
+          lastLogin: "2024-03-15",
+          passwordHash: "$2b$10$HhALUZvWxVXUhwVtStm1f.KJYdy4EX.INUv6OPvnQAlXFE9iNHUcO",
+          notes: "Primary system administrator"
+        }
+      ],
       endpoints: [
         {
           method: "GET",
@@ -56,6 +70,43 @@ router.get('/api-docs', cors(corsOptions), adminMiddleware, async (req, res) => 
     res.json(apiDocs)
   } catch (error) {
     console.error('API docs error:', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+router.get('/dashboard', cors(corsOptions), adminMiddleware, async (req, res) => {
+  try {
+    // If user has successfully accessed admin panel through JWT modification
+    if (req.user.role === 'admin') {
+      return res.json({
+        success: true,
+        message: "Admin access granted",
+        // First flag for successful JWT modification
+        jwtFlag: "noco{jwt_t0k3ns_4r3_n0t_s3cur3}",
+        adminData: {
+          systemStatus: "Debug Mode Active",
+          users: [
+            {
+              username: "sly_fox",
+              role: "admin",
+              lastLogin: "2024-03-15",
+              // Second flag will be sly's cracked password hash
+              passwordHash: "$2b$10$HhALUZvWxVXUhwVtStm1f.KJYdy4EX.INUv6OPvnQAlXFE9iNHUcO",
+              notes: "Primary system administrator"
+            }
+          ]
+        }
+      })
+    }
+
+    // Regular response for non-admin users
+    return res.json({
+      success: false,
+      message: "Insufficient permissions"
+    })
+
+  } catch (error) {
+    console.error('Dashboard error:', error)
     res.status(500).json({ message: 'Internal server error' })
   }
 })
