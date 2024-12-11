@@ -32,7 +32,6 @@ router.get('/api-docs', cors(corsOptions), adminMiddleware, async (req, res) => 
           username: "sly_fox",
           role: "admin",
           lastLogin: "2024-03-15",
-          passwordHash: "$2b$10$HhALUZvWxVXUhwVtStm1f.KJYdy4EX.INUv6OPvnQAlXFE9iNHUcO",
           notes: "Primary system administrator"
         }
       ],
@@ -57,7 +56,6 @@ router.get('/api-docs', cors(corsOptions), adminMiddleware, async (req, res) => 
                   username: "sly_fox",
                   role: "admin",
                   email: "sly@example.com",
-                  passwordHash: "$2b$10$msFIaGa8rsd1idWuilE4B.uoHK6YMqz9nEX.KPaZ41AodK9XHoNbG",
                   notes: "Primary admin account - Senior Developer"
                 }
               ]
