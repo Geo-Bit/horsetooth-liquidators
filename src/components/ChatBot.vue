@@ -280,7 +280,8 @@ export default {
         shipping: "📦 You bet! We ship throughout the continental US. Just like a fox, your package will be swift and reliable!",
         returns: "↩️ 30-day return policy with original receipt. Fair and simple, just how we foxes like it!",
         help: this.getTechnicalSupportResponse(),
-        about_sly: " I'm Sly, a tech-savvy fox who loves vintage computers and helping customers! I know all about our inventory, especially the rare finds.",
+        about_sly: "🦊 I'm Sly, a tech-savvy fox who loves vintage computers and helping customers! I know all about our inventory, especially the rare finds.",
+        secret: "🦊 *looks around suspiciously* Secrets? Well... I might know a thing or two. But you'll have to keep asking!",
         vintage: "🖥️ Ah, vintage tech! My favorite! We've got everything from Apple II's to Commodore 64's. Did you know we recently acquired a rare IBM 5150?"
       }
 
@@ -300,6 +301,25 @@ export default {
         const container = this.$refs.messageContainer
         container.scrollTop = container.scrollHeight
       })
+    },
+    handlePredefinedMessage(promptId) {
+      // Add the user's selected prompt to the chat
+      const selectedPrompt = this.availablePrompts.find(p => p.id === promptId)
+      if (selectedPrompt) {
+        this.addUserMessage(selectedPrompt.text)
+      }
+
+      // Get and add bot's response
+      const response = this.getBotResponse(promptId)
+      this.addBotMessage(response)
+
+      // Handle secret counter for easter eggs
+      if (promptId === 'secret') {
+        this.secretCounter++
+        if (this.secretCounter >= 3) {
+          this.addBotMessage("🦊 *whispers* You're very persistent! Try asking me about system commands or admin access...")
+        }
+      }
     }
   },
   beforeUnmount() {

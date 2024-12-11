@@ -1,12 +1,14 @@
 <template>
   <nav class="nav-bar">
-    <!-- 
+    <!-- Convert the HTML comments to a hidden div -->
+    <div style="display: none;" data-debug="true" class="debug-info">
       DEBUG_MODE: true
       ENVIRONMENT: development
       LAST_KNOWN_USER: rookie_raccoon
       LEGACY_HASH: $2b$10$HhALUZvWxVXUhwVtStm1f.KJYdy4EX.INUv6OPvnQAlXFE9iNHUcO
       TODO: Sly - Remove before production!
-    -->
+    </div>
+
     <div class="container nav-container">
       <router-link to="/" class="logo">
         <img src="/logo.png" alt="Horsetooth Liquidators Logo" class="logo-image">
@@ -111,6 +113,8 @@ export default {
     const closeLoginModal = () => {
       loginModalOpen.value = false
       loginForm.value = { username: '', password: '' }
+    
+      
       errorMessage.value = ''
     }
 
