@@ -29,6 +29,16 @@ This project provides hands-on experience with common web vulnerabilities in a s
 ## 🚀 Getting Started
 
 ### Development (local) Deployment
+Run Docker Compose to start the application:
+```
+docker compose up -d --build
+```
+(Optional) Run the frontend separately in dev mode:
+```
+cd frontend
+npm run dev
+```
+
 The application will be available at:
 - Frontend: http://localhost:5173
 - Backend: http://localhost:3000
