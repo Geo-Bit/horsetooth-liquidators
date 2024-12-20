@@ -76,8 +76,31 @@
                 API Documentation
                 <span class="debug-badge">DEBUG</span>
               </router-link>
+              
+              <!-- Add new system status section -->
+              <div class="system-status-section">
+                <h3>System Status</h3>
+                <div class="status-grid">
+                  <div class="status-item" v-for="(status, index) in systemStatus" :key="index">
+                    <span class="status-label">{{ status.label }}:</span>
+                    <span :class="['status-value', status.type]">{{ status.value }}</span>
+                  </div>
+                </div>
+                
+                <!-- Add maintenance logs section -->
+                <div class="maintenance-logs">
+                  <h4>Recent Maintenance Logs</h4>
+                  <div class="log-entries">
+                    <div v-for="(log, index) in maintenanceLogs" 
+                         :key="index" 
+                         :class="['log-entry', log.level]">
+                      <span class="log-timestamp">{{ log.timestamp }}</span>
+                      <span class="log-message">{{ log.message }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-
           </div>
         </div>
       </template>
@@ -227,6 +250,42 @@ export default {
       }
     }
 
+    const systemStatus = ref([
+      { 
+        label: 'Database Backup Status', 
+        value: 'Latest backup: backup_20240315.sql', 
+        type: 'info' 
+      },
+      { 
+        label: 'Backup Storage', 
+        value: 'https://storage.googleapis.com/horsetooth-backups-public/backup_20240315.sql', 
+        type: 'warning'  // Makes it stand out
+      },
+      { 
+        label: 'Next Scheduled Backup', 
+        value: '2024-03-16 00:00 UTC', 
+        type: 'info' 
+      }
+    ])
+
+    const maintenanceLogs = ref([
+      {
+        timestamp: '2024-03-15 10:00:03',
+        message: 'WARNING: Google Cloud Storage bucket permissions need review',
+        level: 'warning'
+      },
+      {
+        timestamp: '2024-03-15 10:00:02',
+        message: 'Daily backup completed: https://storage.googleapis.com/horsetooth-backups-public/backup_20240315.sql',
+        level: 'info'
+      },
+      {
+        timestamp: '2024-03-15 09:59:59',
+        message: 'TODO: Implement proper backup encryption - Sly',
+        level: 'debug'
+      }
+    ])
+
     return {
       loading,
       user,
@@ -246,7 +305,9 @@ export default {
       cameraUrl,
       cameraError,
       handleImageError,
-      closeCameraModal
+      closeCameraModal,
+      systemStatus,
+      maintenanceLogs
     }
   }
 }
@@ -482,5 +543,59 @@ export default {
   padding: 5px 15px;
   border-radius: 20px;
   font-size: 0.9em;
+}
+
+.system-status-section {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.status-grid {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  background: white;
+  border-radius: 4px;
+}
+
+.status-value.warning {
+  color: #ff9800;
+  font-family: monospace;
+}
+
+.maintenance-logs {
+  margin-top: 20px;
+}
+
+.log-entry {
+  font-family: monospace;
+  padding: 8px;
+  margin: 5px 0;
+  background: #f5f5f5;
+  border-left: 4px solid #ddd;
+  font-size: 0.9em;
+}
+
+.log-entry.warning {
+  border-left-color: #ff9800;
+  background: #fff3e0;
+}
+
+.log-entry.debug {
+  border-left-color: #2196f3;
+  background: #e3f2fd;
+}
+
+.log-timestamp {
+  color: #666;
+  margin-right: 10px;
 }
 </style> 

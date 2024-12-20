@@ -48,7 +48,7 @@ INSERT INTO order_items (order_id, product_id, quantity, price, name) VALUES
 (1, 3, 1, 799.99, 'Vintage IBM Keyboard');
 
 -- Order for mr_badger (user_id 1) with hidden flag
-INSERT INTO orders (user_id, date, status, total, notes) VALUES 
+INSERT INTO orders (user_id, date, status, total, notes) VALUES
 (1, '2024-02-14', 'completed', 2999.99, 'noco{7b4d8e2f1a9c6b3d5e8f2a1b4c7d9e6a}');
 
 INSERT INTO order_items (order_id, product_id, quantity, price, name) VALUES 

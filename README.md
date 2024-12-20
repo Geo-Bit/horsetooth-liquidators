@@ -6,13 +6,13 @@
 
 ## About
 
-Horsetooth Liquidators is a deliberately vulnerable web application designed for the NoCo Hackers security meetup. This fictional ecommerce platform simulates a local Fort Collins business that specializes in liquidating various goods and merchandise.
+Horsetooth Liquidators is a deliberately vulnerable web application designed for the NoCo Hackers Holiday CTF Event 2024. This fictional ecommerce platform simulates a local Fort Collins business that specializes in liquidating various goods and merchandise.
 
-Built with Vue 3 + Vite on the frontend and Node.js + Express on the backend, this application serves as a practical learning environment for web security testing and exploitation.
+Built with Vue 3 + Vite on the frontend and Node.js + Express on the backend, this application serves as a practical CTF lab and includes a number of vulnerabilities to exploit.
 
 ## 🎯 Purpose
 
-This project provides hands-on experience with common web vulnerabilities in a safe, controlled environment. It's designed to help security enthusiasts, penetration testers, and developers understand:
+This project provides hands-on experience with common web vulnerabilities in a safe, controlled environment allowing players to capture and submit flags. It's designed to help security enthusiasts, penetration testers, and developers understand:
 - Common web application vulnerabilities
 - Secure coding practices
 - Web application security testing
@@ -58,4 +58,4 @@ This project is maintained by the NoCo Hackers community. If you'd like to contr
 
 ## 🙏 Acknowledgments
 
-Special thanks to the NoCo Hackers community and the opportunity to build this vulnerable web app.
+Special thanks to the NoCo Hackers community and the opportunity to build this vulnerable web app for the 2024 Holiday CTF Event.
