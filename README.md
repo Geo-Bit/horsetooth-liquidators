@@ -4,11 +4,16 @@
   <img src="public/logo.png" alt="Horsetooth Liquidators Logo" width="200"/>
 </p>
 
+
 ## About
 
 Horsetooth Liquidators is a deliberately vulnerable web application designed for the NoCo Hackers Holiday CTF Event 2024. This fictional ecommerce platform simulates a local Fort Collins business that specializes in liquidating various goods and merchandise.
 
 Built with Vue 3 + Vite on the frontend and Node.js + Express on the backend, this application serves as a practical CTF lab and includes a number of vulnerabilities to exploit.
+
+<p align="center">
+  <img src="horsetooth-frontpage.png" alt="Horsetooth Liquidators Homepage" width="800"/>
+</p>
 
 ## 🎯 Purpose
 
